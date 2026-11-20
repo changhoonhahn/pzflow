@@ -89,7 +89,7 @@ EAZY-py 0.8.7 uses `FILTER.RES.latest`, filter IDs **409, 314, 315, 316, 317,
 318** for u,g,r,i,z,y; the 12 `tweak_fsps_QSF_12_v3` templates; the UVISTA
 `template_error_10.def` and `lambda.def` files; and, for the prior run,
 `prior_R_zmax7.dat`. The F160W prior is a configuration default, not an applied
-prior in the flat run. The historical environment is archived in `tmp/three_step_before`; EAZY is not a dependency of the current workflow.
+prior in the flat run. The historical environment is archived in `tmp/three_step_before`; EAZY is also available in the current optional broadband baseline script.
 
 EAZY applies per-object `ebv_mw` with coefficients
 `[4.807, 3.690, 2.715, 2.000, 1.515, 1.298]`, multiplying **both** fluxes and
@@ -212,3 +212,31 @@ are not alone proof that numeric values differ. Compare IDs and values when
 reconstructing an extract. `.partial` files, `classic_pdf_part_*`, `.prefix`
 files, and `classic_ebv_failed_query.xml` are transport/error artifacts, not
 analysis inputs. The supplied unrelated TeX reference draft is not a dataset.
+
+## Optional EAZY broadband baseline
+
+`bin/run_eazy.py` reads the same `data/parent.npz` fluxes/errors as the flows.
+By default it fits the 5,083 held-out secure-spec galaxies, without supplying
+any spectroscopic redshift to EAZY. `--sample test` fits all photometric test
+objects; `--sample all` fits the entire parent. No noise is regenerated.
+
+```bash
+python bin/run_eazy.py
+python bin/run_eazy.py --r-prior
+```
+
+Restore the public EAZY resources and catalog EBV extract described above first.
+The R-prior mode also requires `classic_magnitude_intervals.csv` for `total_off2`.
+Inputs are matched by ID, and both fluxes and errors receive the same extinction
+(and optional aperture-to-total) correction. The native CFHT/HSC filters remain
+an approximation to LSST. No template/zero-point calibration is trained.
+
+Outputs default to `results/eazy/flat/` and `results/eazy/rprior/`, which must be
+empty before a run. `--output` chooses another directory. Saved NPZ files contain
+IDs, a redshift grid, normalized PDFs, chi-squared fits, EAZY zml, original
+parent fluxes/errors, and the corrected values passed to EAZY. Manifests record
+EAZY parameters, sample selection, and SHA256 hashes of the parent, auxiliary
+catalogs, filters, individual templates, and prior. Results remain local.
+
+For a quick verification of either mode use `--limit 20 --output results/eazy/smoke`.
+Limited runs are explicitly flagged as smoke tests, not full-sample results.

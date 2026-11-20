@@ -6,3 +6,8 @@ ipykernel==7.4.0
 torch==2.14.1
 nflows==0.14
 astropy==8.0.2
+scipy==1.18.1
+eazy==0.8.7
+dust_extinction==1.7
+extinction==0.4.10
+h5py==3.16.0

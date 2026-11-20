@@ -7,4 +7,4 @@
 - Keep code minimal. Use the single requirements.txt and setup.py; avoid duplicate wrapper/implementation layers and redundant notebook generators.
 - Maintain data provenance and reproducibility notes in bin/data/. Preserve the user's concise README.
 
-- Keep the active workflow to bin/lsst_like.py, bin/match_cosmos.py, and bin/train_flows.py. All analyses use data/parent.npz. Retain only one small shared utility file, src/pzflow/utils.py, plus package initialization. Ask before adding more shared modules.
+- Keep the active workflow to bin/lsst_like.py, bin/match_cosmos.py, bin/train_flows.py, and bin/run_eazy.py. All analyses use data/parent.npz. Retain only one small shared utility file, src/pzflow/utils.py, plus package initialization. Ask before adding more shared modules.
