@@ -1,6 +1,0 @@
--r requirements-flow.txt
-eazy==0.8.7
-scipy==1.18.1
-dust_extinction==1.7
-extinction==0.4.10
-h5py==3.16.0

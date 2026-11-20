@@ -1,2 +1,2 @@
-"""COSMOS2020 posterior transfer and photo-z robustness experiments."""
-__version__ = "0.1.0"
+"""COSMOS2020 probabilistic redshift transfer."""
+__version__="0.1.0"
