@@ -1,0 +1,9 @@
+{
+  "same_test_ids": true,
+  "original_flow_predictions_unchanged": true,
+  "eazy_smoke_vs_full_max_pdf_difference": 0.0,
+  "all_eazy_posteriors_finite": true,
+  "all_eazy_posteriors_nonempty": true,
+  "rprior_cached_vs_direct_refit_max_pdf_difference": 5.4836273193359375e-06,
+  "rprior_cached_vs_direct_refit_passed": true
+}

@@ -1,0 +1,20 @@
+{
+  "scenarios": [
+    "baseline",
+    "f01_w025",
+    "f01_w050",
+    "f01_w100",
+    "f03_w025",
+    "f03_w050",
+    "f03_w100",
+    "f05_w025",
+    "f05_w050",
+    "f05_w100",
+    "f10_w025",
+    "f10_w050",
+    "f10_w100"
+  ],
+  "n_trained": 12,
+  "n_reused_baselines": 1,
+  "completed": true
+}

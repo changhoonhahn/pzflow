@@ -1,0 +1,125 @@
+COSMOS2020 PDF-to-six-band normalizing-flow experiment
+
+Current run is a FORECAST using native CFHT-u / HSC-grizy aperture fluxes,
+NOT measured Rubin photometry or synthetic LSST bandpass integration.
+There is no authenticated Rubin catalog available in this workspace.
+The data-mode warning is recorded in the plots and machine-readable manifest.
+
+The implementation trains q_theta(z | six fluxes, six errors) by resampling
+z from each COSMOS2020 LePhare PDF and perturbing the broadband fluxes with
+a known Gaussian transfer kernel. This minimizes the posterior-averaged
+negative log density. No prior division or teacher recalibration is applied;
+the COSMOS redshift distributions are assumed unbiased for this experiment.
+Their released uncertainty widths and tails are retained, not assumed calibrated.
+
+For this first stage, the analytic noise kernel replaces the originally proposed
+learned p(x | y). It does not model full bandpass conversion, deblending,
+correlated noise, source detection, or differences between survey populations.
+An empirical transfer flow would be a subsequent experiment using matched data.
+
+Baseline: an identical conditional normalizing flow trained on secure spec-z
+labels, using ONLY the six broadband fluxes/errors. It is a conventional
+supervised broadband photo-z baseline, not an official Rubin photo-z product
+and not a template-fitting comparison. Both models use exactly the same test
+photometry; neither receives COSMOS multiband features or a COSMOS photo-z
+at inference. Differences reflect labels and training-sample size/selection.
+
+CURRENT REVISED SELECTION (replaces the original oversampled experiment):
+Clean COSMOS combined footprint (flag_combined=0), galaxy template lp_type=0,
+native HSC i < 25 AB in a 2 arcsec aperture and native i S/N >= 5,
+finite six-band fluxes and positive native and effective errors, valid full PDF.
+No detection or positive-flux requirement in the other five bands; no photo-z
+precision or spec/photo-z agreement cut. Magnitude selection uses native COSMOS
+photometry before LSST-like noise augmentation, not noisy simulated photometry.
+The entire eligible catalog population is retained: no cap, no spec preference,
+and no sampling weights. The input CSV contains 711,918 preselected clean galaxy
+rows with positive LePhare photo-zs, not the complete 1.7 million-source catalog.
+The i < 25 choice defines a conservative, reproducible catalog population; it
+is NOT an injection/recovery completeness result or a total-magnitude cut.
+The combined image detection, galaxy classification and usable-measurement
+requirements still select the population. No exact LSST selection is modeled.
+
+The revised census contains 162,239 objects: 111,952 train, 23,652 validation,
+26,635 photometric test. All test-region objects are excluded from training;
+only 5,083 with secure public spectroscopy are scored. The secure-spec subset
+remains heterogeneous and is not reweighted to the photometric parent.
+Assignment to train/validation/test is by disjoint 0.05-degree sky cells,
+with the random cell map fixed before magnitude selection and independently
+of spectroscopic availability. Expected cell probabilities are 70/15/15;
+actual galaxy fractions differ because cells contain unequal object counts.
+All augmentations of a galaxy remain in its cell's split. Context normalization
+is fit on training photometry only. No spectroscopic test labels are used for
+training, early stopping, hyperparameter choice, or PDF calibration.
+
+Three models are trained on this same parent and evaluated on the same test:
+  cosmos_pdf_flow: all 111,952 training / 23,652 validation objects, PDF labels.
+  cosmos_pdf_matched_flow: exactly the spec baseline objects, PDF labels.
+  broadband_spec_flow: 22,604 training / 4,803 validation objects, spec labels.
+The matched model controls BOTH training count and object selection, isolating
+the label-source comparison on the spectroscopic selection. Full-versus-matched
+PDF training changes both size and selection; it is not a pure size-only test.
+All use one shared feature normalization estimated without redshift labels on
+the full training photometry. COSMOS teacher validation uses sampled PDFs;
+baseline validation uses spec-z. Same maximum budgets and early-stopping rules.
+One training seed is used; bootstrap intervals do not include training variance.
+
+Forecast noise: approximate 10-year depth scales (5 sigma AB)
+u/g/r/i/z/y = 25.6/26.9/26.9/26.4/25.6/24.8, from Rubin key numbers:
+https://rubinobservatory.org/for-scientists/rubin-101/key-numbers
+These are point-source depths applied as approximate aperture-noise scales;
+this is not an image-level LSST forecast. Additional variance is
+max(target_sigma^2 - COSMOS_sigma^2, 0). Measurements already noisier than
+the target are retained at their COSMOS uncertainty, not artificially denoised.
+
+Model: 2 conditional rational-quadratic spline autoregressive transforms,
+16 bins, hidden width 64, 2 residual blocks per transform, standard-normal base.
+Redshift is mapped from (0,10) to R by a scaled logit; its Jacobian is included
+when evaluating densities. Fluxes use a fixed asinh transformation, preserving
+negative measurements. Both models have identical architecture, optimizer,
+validation-based early stopping, and maximum optimizer-step budget.
+
+Run (with Python and requirements/requirements-flow.txt installed):
+  python bin/flow_experiment_data.py
+  python bin/test_flow_experiment.py
+  python bin/cosmos_lsst_flow.py --epochs 200 --max-steps 20000
+  python bin/audit_magnitude_selection.py
+  python bin/summarize_flow_comparison.py
+
+Use actual matched Rubin photometry:
+  python bin/flow_experiment_data.py --actual-rubin-csv /absolute/path/catalog.csv
+  python bin/cosmos_lsst_flow.py --epochs 200 --max-steps 20000
+CSV columns: id, flux_u, flux_g, flux_r, flux_i, flux_z, flux_y,
+fluxerr_u, fluxerr_g, fluxerr_r, fluxerr_i, fluxerr_z, fluxerr_y.
+Here id must be the matched COSMOS2020 CLASSIC identifier; fluxes/errors must
+be in microJy, with a consistent photometric extraction/total-flux convention.
+The actual-data adapter never silently renames HSC fluxes as LSST measurements.
+After training, predict quantiles for measured fluxes in the SAME filter system:
+  python bin/predict_flow.py input_fluxes.csv predictions.csv
+Do not apply a native-filter proxy checkpoint directly to actual Rubin fluxes;
+retrain with the actual-data adapter first.
+
+Current data: data/flow_magnitude_limited; current outputs:
+results/flow_magnitude_limited contains checkpoints, training histories,
+explicit split IDs, held-out predictions and PITs, quantitative metrics,
+paired galaxy-bootstrap metric differences, comparison plots, selection audit
+and magnitude-dependent spectroscopy availability. matched_training_ids.npz
+records the shared train/validation IDs for the spec and matched PDF models.
+The historical results/flow_experiment and data/flow_experiment are preserved
+for provenance; they use the superseded non-magnitude-limited oversampling.
+Metrics from the two runs are not directly comparable because test sets differ.
+The bootstrap omits spatial covariance and spectroscopic selection effects.
+The fixed spectroscopic test population is not representative of all LSST sources.
+Our test IDs are excluded from training; their independence from the original
+COSMOS template and zero-point calibration has not been audited.
+
+Numerical validation includes a bimodal posterior sampling test, flow inversion
+and CDF-normalization checks, and conditional-learning recovery on synthetic data.
+
+Data references: Weaver et al. (2022), COSMOS2020;
+Khostovan et al. (2025), COSMOS Spectroscopic Redshift Compilation DR1.1.
+Based on observations collected at the European Southern Observatory under ESO
+programme ID 179.A-2005 and on data products produced by CALET and the Cambridge
+Astronomy Survey Unit on behalf of the UltraVISTA consortium.
+
+Rubin catalog access: https://dp2.lsst.io/access/index.html
+COSMOS files: https://irsa.ipac.caltech.edu/data/COSMOS/tables/cosmos2020/

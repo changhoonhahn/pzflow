@@ -1,0 +1,94 @@
+\section{Observations}\label{sec:observations}
+\subsection{COSMOS2020}
+We use the \cosmos Classic catalog and its released LePhare v2.1 redshift
+probability distributions \citep{weaver2022,ilbert2006}. We select galaxies
+with \texttt{flag\_combined}=0, \texttt{lp\_type}=0, HSC $i_{\rm ap}<25$ AB
+in a $2''$ aperture, and native $i$-band signal-to-noise ratio $\geq5$.
+We require finite CFHT $u$/HSC $grizy$ fluxes, positive flux uncertainties,
+and a finite, nonnegative redshift PDF with nonzero integral. Negative fluxes
+outside the $i$ band are retained. Of 170,003 objects passing the magnitude
+and signal-to-noise cuts, \NParent\ have usable six-band measurements;
+all have valid PDFs. Selection does not require spectroscopy.
+
+We divide the field into $0.05^\circ$ sky cells and randomly assign cells
+to training, validation, and test sets with probabilities 0.70, 0.15, and
+0.15, using seed 20261024. We fix these assignments before magnitude
+selection. The resulting sets contain \NTrain, \NValidation, and
+\NPhotTest\ galaxies. No galaxy in a test cell is used for training.
+
+\subsection{LSST-like Broadband Photometry}
+The deep COSMOS observations provide both the multiband redshift labels and
+the broadband measurements used to train our estimator. Using their native
+broadband precision would test performance at COSMOS depth, rather than at
+the noise levels expected for LSST. Photometric noise broadens color--redshift
+degeneracies and changes the conditional distribution $p(z\given x)$.
+We therefore add noise to the broadband inputs while retaining the redshift
+information from the deep multiband observations. This lets us test how well
+that information transfers to noisier broadband measurements and evaluate
+all broadband methods on the same inputs.
+
+We use native CFHT $u$ and HSC $grizy$ aperture measurements and add noise
+to approximate LSST ten-year depths. The adopted $5\sigma$ point-source
+depths are $(25.6,26.9,26.9,26.4,25.6,24.8)$ AB \citep{rubindepths}.
+For each band, we set
+\begin{align}
+\sigma_{\rm tar}&=\frac{10^{(23.9-m_5)/2.5}}{5}\ \mu{\rm Jy},\\
+\sigma_{\rm eff}&=\max(\sigma_{\rm deep},\sigma_{\rm tar}),\\
+f'&=f_{\rm deep}+\epsilon,\quad
+\epsilon\sim\mathcal N(0,\sigma_{\rm eff}^2-\sigma_{\rm deep}^2).
+\label{eq:kernel}
+\end{align}
+We draw noise independently between bands and retain measurements already
+noisier than the target depth. Selection precedes noise addition.
+This model changes the noise level but retains the native filters.
+It does not reproduce Rubin bandpasses, detection, blending, or correlated
+measurement errors.
+
+\subsection{Spectroscopic Redshifts}
+We match Classic identifiers to the DR1.1 unique-object COSMOS spectroscopic
+compilation \citep{khostovan2025}. We retain public galaxy measurements with
+quality flags 3, 4, 13, or 14 and positive finite spectroscopic redshifts.
+The parent match also requires a valid nonnegative catalog photo-$z$.
+For duplicate observations, we use the compilation's preferred measurement.
+We impose no photo-$z$/spec-$z$ agreement cut. The labels combine programs
+including DESI, zCOSMOS, DEIMOS, C3R2, and LEGA-C.
+
+The training, validation, and test sets contain 22,604, 4,803, and \NTest\
+secure spectroscopic matches. We evaluate all methods on these same
+\NTest\ test galaxies. Spectroscopy strongly favors brighter objects:
+the median $i_{\rm ap}$ is 22.69 for the spectroscopic test sample and
+24.17 for the full photometric test sample. Appendix~\ref{sec:selection}
+shows their magnitude distributions.
+
+\subsection{Benchmark Photo-zs}
+We compare our method with three benchmarks:
+\begin{itemize}
+\item \textbf{Broadband flow.} A conditional flow trained on secure
+spectroscopic redshifts. It uses the same architecture, six-band inputs,
+preprocessing, noise augmentation, optimizer, and stopping rules as our
+method. Only the training population and redshift labels differ.
+We use this benchmark instead of SOMPZ because it directly compares
+individual conditional redshift distributions within one model family.
+SOMPZ groups galaxies in photometric space to calibrate ensemble redshift
+distributions \citep{buchs2019,myles2021}. The flow avoids this discretization
+and isolates differences from training data without introducing a different
+estimator. We do not test whether it outperforms SOMPZ.
+
+\item \textbf{Broadband EAZY.} Template fitting with EAZY-py 0.8.7
+\citep{brammer2008}. We fit the saved noisy test measurements using its
+12 tweaked FSPS templates, nonnegative template coefficients, 1\% systematic
+flux error, and template-error amplitude 0.20. The redshift grid spans
+$0.001<z<10$ with $\Delta z/(1+z)=0.005$. We correct fluxes and errors for
+catalog Galactic extinction and apply the supplied
+\texttt{prior\_R\_zmax7.dat} to HSC $r$, with an aperture-to-total correction.
+This filter mapping is approximate. We fit no population-specific prior,
+zero-point, or template corrections and provide no test redshifts to EAZY.
+
+\item \textbf{Full-multiband LePhare.} The released COSMOS2020 redshift
+distribution.
+It supplies our training labels and uses more photometric information than
+the broadband methods. Its comparison measures how much accuracy is retained
+when transferring to six noisy bands.
+\end{itemize}
+Both template-fitting benchmarks have calibration histories that differ
+from those of our flows.

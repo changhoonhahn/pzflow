@@ -1,0 +1,35 @@
+\section{Discussion and Conclusions}\label{sec:discussion}
+We present a framework for training broadband redshift distributions with
+uncertain labels from deep multiband imaging. Applied to COSMOS2020, the
+bootstrapped flow has lower robust scatter than a spectroscopically trained
+broadband flow and the adopted EAZY configuration. Its nominal intervals
+also have nearly correct aggregate coverage on the spectroscopic test
+sample. The comparison with the broadband flow changes both training
+sample size and selection, so it does not identify which drives the gain.
+
+The method propagates the input PDFs; it does not guarantee their accuracy.
+LePhare undercovers in both spectroscopic assessments and has nonzero median
+residuals. The bootstrapped flow can inherit template errors, prior dependence,
+and missing populations. Its improved aggregate coverage does not show that
+these errors are removed. Spatially disjoint splits prevent reuse of test
+objects in flow training, but spectroscopy may have contributed to the
+original COSMOS template and zero-point calibration. One field also cannot
+measure field-to-field population variation.
+
+Our noise-degradation experiment approximates LSST depth, not LSST selection.
+DESC gold forecasts adopt $i<24.1$ for Year~1 and $i<25.3$ for Year~10,
+using CModel magnitudes and separate weak-lensing selection criteria
+\citep{desc2018}. Our $2''$ aperture cut differs: near its boundary, the
+median aperture-to-total offset is $-0.22$ mag, corresponding to
+$i_{\rm total}\simeq24.78$ at $i_{\rm ap}=25$, before Galactic correction.
+We also select galaxies before noise addition and require six usable deep
+measurements and a valid redshift PDF. Noise addition does not reproduce
+Rubin detection, blending, morphology, or shape selection.
+
+The next step is to test the transfer with matched Rubin and COSMOS
+measurements, apply the target selection after transfer, and validate
+population coverage. Multiple training seeds, additional deep fields,
+and independent faint-galaxy spectroscopy are needed to quantify training
+variance, field variation, and selection effects. Recalibration of the
+input PDFs should be tested separately. These steps will determine whether
+bootstrapping deep multiband redshifts can meet LSST calibration requirements.

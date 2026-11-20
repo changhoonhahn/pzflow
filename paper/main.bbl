@@ -1,0 +1,96 @@
+\begin{thebibliography}{}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+\providecommand{\url}[1]{\href{#1}{#1}}
+\providecommand{\dodoi}[1]{doi:~\href{http://doi.org/#1}{\nolinkurl{#1}}}
+\providecommand{\doeprint}[1]{\href{http://ascl.net/#1}{\nolinkurl{http://ascl.net/#1}}}
+\providecommand{\doarXiv}[1]{\href{https://arxiv.org/abs/#1}{\nolinkurl{https://arxiv.org/abs/#1}}}
+
+\bibitem[{Brammer {et~al.}(2008)Brammer, van Dokkum, \& Coppi}]{brammer2008}
+Brammer, G.~B., van Dokkum, P.~G., \& Coppi, P. 2008, \apj, 686, 1503,
+  \dodoi{10.1086/591786}
+
+\bibitem[{Buchs {et~al.}(2019)Buchs, Davis, Gruen, {et~al.}}]{buchs2019}
+Buchs, R., Davis, C., Gruen, D., {et~al.} 2019, \mnras, 489, 820,
+  \dodoi{10.1093/mnras/stz2162}
+
+\bibitem[{Durkan {et~al.}(2019)Durkan, Bekasov, Murray, \&
+  Papamakarios}]{durkan2019}
+Durkan, C., Bekasov, A., Murray, I., \& Papamakarios, G. 2019, in Advances in
+  Neural Information Processing Systems, Vol.~32.
+\newblock
+  \url{https://papers.neurips.cc/paper_files/paper/2019/hash/7ac71d433f282034e088473244df8c02-Abstract.html}
+
+\bibitem[{Giblin {et~al.}(2021)Giblin, Heymans, Asgari, {et~al.}}]{giblin2021}
+Giblin, B., Heymans, C., Asgari, M., {et~al.} 2021, \aap, 645, A105,
+  \dodoi{10.1051/0004-6361/202038850}
+
+\bibitem[{Hahn \& Melchior(2024)}]{hahn2024}
+Hahn, C., \& Melchior, P. 2024, arXiv e-prints,
+  \dodoi{10.48550/arXiv.2409.19054}
+
+\bibitem[{Hildebrandt {et~al.}(2021)Hildebrandt, van~den Busch, Wright,
+  {et~al.}}]{hildebrandt2021}
+Hildebrandt, H., van~den Busch, J.~L., Wright, A.~H., {et~al.} 2021, \aap, 647,
+  A124, \dodoi{10.1051/0004-6361/202039018}
+
+\bibitem[{Ilbert {et~al.}(2006)Ilbert, Arnouts, McCracken,
+  {et~al.}}]{ilbert2006}
+Ilbert, O., Arnouts, S., McCracken, H.~J., {et~al.} 2006, \aap, 457, 841,
+  \dodoi{10.1051/0004-6361:20065138}
+
+\bibitem[{Ivezi{\'c} {et~al.}(2019)Ivezi{\'c}, Kahn, Tyson,
+  {et~al.}}]{ivezic2019}
+Ivezi{\'c}, {\v Z}., Kahn, S.~M., Tyson, J.~A., {et~al.} 2019, \apj, 873, 111,
+  \dodoi{10.3847/1538-4357/ab042c}
+
+\bibitem[{Khostovan {et~al.}(2025)Khostovan, Kartaltepe, Salvato,
+  {et~al.}}]{khostovan2025}
+Khostovan, A.~A., Kartaltepe, J.~S., Salvato, M., {et~al.} 2025, arXiv
+  e-prints, \dodoi{10.48550/arXiv.2503.00120}
+
+\bibitem[{Lan {et~al.}(2023)Lan, Tojeiro, Armengaud, {et~al.}}]{lan2023}
+Lan, T.-W., Tojeiro, R., Armengaud, E., {et~al.} 2023, \apj, 943, 68.
+\newblock \doarXiv{2208.08516}
+
+\bibitem[{Lemos {et~al.}(2023)Lemos, Coogan, Hezaveh, \&
+  Perreault-Levasseur}]{lemos2023}
+Lemos, P., Coogan, A., Hezaveh, Y., \& Perreault-Levasseur, L. 2023, in
+  Proceedings of Machine Learning Research, Vol. 202, Proceedings of the 40th
+  International Conference on Machine Learning (PMLR), 19256--19273.
+\newblock \url{https://proceedings.mlr.press/v202/lemos23a.html}
+
+\bibitem[{{LSST Dark Energy Science Collaboration}(2018)}]{desc2018}
+{LSST Dark Energy Science Collaboration}. 2018, arXiv e-prints,
+  \dodoi{10.48550/arXiv.1809.01669}
+
+\bibitem[{Miyatake {et~al.}(2023)Miyatake, Sugiyama, Takada,
+  {et~al.}}]{miyatake2023}
+Miyatake, H., Sugiyama, S., Takada, M., {et~al.} 2023, Physical Review D, 108,
+  123517, \dodoi{10.1103/PhysRevD.108.123517}
+
+\bibitem[{Myles {et~al.}(2021)Myles, Alarcon, Amon, {et~al.}}]{myles2021}
+Myles, J., Alarcon, A., Amon, A., {et~al.} 2021, \mnras, 505, 4249,
+  \dodoi{10.1093/mnras/stab1515}
+
+\bibitem[{Newman {et~al.}(2015)Newman, Abate, Abdalla, {et~al.}}]{newman2015}
+Newman, J.~A., Abate, A., Abdalla, F.~B., {et~al.} 2015, Astroparticle Physics,
+  63, 81, \dodoi{10.1016/j.astropartphys.2014.06.007}
+
+\bibitem[{Papamakarios {et~al.}(2021)Papamakarios, Nalisnick, Rezende, Mohamed,
+  \& Lakshminarayanan}]{papamakarios2021}
+Papamakarios, G., Nalisnick, E., Rezende, D.~J., Mohamed, S., \&
+  Lakshminarayanan, B. 2021, Journal of Machine Learning Research, 22, 1.
+\newblock \url{https://jmlr.org/papers/v22/19-1028.html}
+
+\bibitem[{{Rubin Observatory Project Science Team}(2022)}]{rubindepths}
+{Rubin Observatory Project Science Team}. 2022, Updated estimates of the
+  {Rubin} system throughput and expected {LSST} image depth, Rubin Technical
+  Note PSTN-054.
+\newblock \url{https://pstn-054.lsst.io/}
+
+\bibitem[{Weaver {et~al.}(2022)Weaver, Kauffmann, Ilbert,
+  {et~al.}}]{weaver2022}
+Weaver, J.~R., Kauffmann, O.~B., Ilbert, O., {et~al.} 2022, \apjs, 258, 11,
+  \dodoi{10.3847/1538-4365/ac3078}
+
+\end{thebibliography}

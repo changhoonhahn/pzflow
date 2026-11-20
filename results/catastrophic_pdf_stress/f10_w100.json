@@ -1,0 +1,83 @@
+{
+  "fraction": 0.1,
+  "wrong_mode_weight": 1.0,
+  "n_affected": 11195,
+  "effective_wrong_probability_mass": 0.06900313734675387,
+  "effective_training_wrong_probability_mass": 0.09999821352008004,
+  "metrics": {
+    "all": {
+      "n": 5083,
+      "bias": -0.005613106332384709,
+      "sigma_nmad": 0.01825375254102495,
+      "outlier_fraction": 0.02773952390320677,
+      "rmse_normalized": 0.14430557105908842,
+      "coverage68": 0.7891009246507967,
+      "coverage95": 0.9868188077906748,
+      "mean_negative_log_density": -1.6160553693771362,
+      "median_width68": 0.0843794047832489
+    },
+    "i_lt_22.5": {
+      "n": 2203,
+      "bias": -0.00347757274612574,
+      "sigma_nmad": 0.016219290591135683,
+      "outlier_fraction": 0.005901044030866999,
+      "rmse_normalized": 0.04556400300665531,
+      "coverage68": 0.8134362233318202,
+      "coverage95": 0.9877439854743532,
+      "mean_negative_log_density": -1.9595814943313599,
+      "median_width68": 0.06764650344848633
+    },
+    "i_22.5_24": {
+      "n": 2378,
+      "bias": -0.006762155666658956,
+      "sigma_nmad": 0.0179698207014185,
+      "outlier_fraction": 0.02691337258200168,
+      "rmse_normalized": 0.12893406246682107,
+      "coverage68": 0.7796467619848613,
+      "coverage95": 0.9911690496215307,
+      "mean_negative_log_density": -1.5468372106552124,
+      "median_width68": 0.09924238920211792
+    },
+    "i_24_24.5": {
+      "n": 337,
+      "bias": -0.012973917117331691,
+      "sigma_nmad": 0.030722933759617432,
+      "outlier_fraction": 0.11275964391691394,
+      "rmse_normalized": 0.3791793816772027,
+      "coverage68": 0.7359050445103857,
+      "coverage95": 0.9703264094955489,
+      "mean_negative_log_density": -0.5647336840629578,
+      "median_width68": 0.22411024570465088
+    },
+    "i_24.5_25": {
+      "n": 165,
+      "bias": -0.019454167833481365,
+      "sigma_nmad": 0.044152266044417,
+      "outlier_fraction": 0.15757575757575756,
+      "rmse_normalized": 0.2838115508922597,
+      "coverage68": 0.7090909090909091,
+      "coverage95": 0.9454545454545454,
+      "mean_negative_log_density": -0.1742839217185974,
+      "median_width68": 0.44377851486206055
+    },
+    "z_gt_2": {
+      "n": 167,
+      "bias": -0.020682471063964883,
+      "sigma_nmad": 0.06162554139158166,
+      "outlier_fraction": 0.16167664670658682,
+      "rmse_normalized": 0.1987101537234167,
+      "coverage68": 0.6706586826347305,
+      "coverage95": 0.8982035928143712,
+      "mean_negative_log_density": 0.3330620527267456,
+      "median_width68": 0.7045202255249023
+    }
+  },
+  "training": {
+    "n_train": 111952,
+    "n_validation": 23652,
+    "steps": 20000,
+    "epochs": 92,
+    "best_validation_loss": -0.7568713761866093,
+    "seconds": 63.83473350002896
+  }
+}

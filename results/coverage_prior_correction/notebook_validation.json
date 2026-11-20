@@ -1,0 +1,20 @@
+[
+  {
+    "notebook": "figure_all_models.ipynb",
+    "code_cells": 1,
+    "inline_figures": 2,
+    "errors": 0
+  },
+  {
+    "notebook": "figure_nz_ratio.ipynb",
+    "code_cells": 1,
+    "inline_figures": 1,
+    "errors": 0
+  },
+  {
+    "notebook": "figure_prior_correction.ipynb",
+    "code_cells": 1,
+    "inline_figures": 1,
+    "errors": 0
+  }
+]

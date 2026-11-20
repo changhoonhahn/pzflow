@@ -1,0 +1,76 @@
+\documentclass[twocolumn,linenumbers]{aastex63}
+\usepackage{amsmath}
+\usepackage{bm}
+\usepackage{xspace}
+\newcommand{\photoz}{photo-$z$\xspace}
+\newcommand{\cosmos}{COSMOS2020\xspace}
+\newcommand{\given}{\,|\,}
+\input{numbers}
+\shorttitle{Distilling COSMOS Redshift Posteriors}
+\shortauthors{Working draft}
+\hypersetup{
+  pdftitle={Distilling COSMOS2020 Redshift Posteriors into Broadband Normalizing Flows},
+  pdfauthor={},
+  pdfsubject={ApJL-style working draft: COSMOS posterior transfer experiment},
+  pdfkeywords={photometric redshifts, COSMOS2020, normalizing flows}
+}
+\let\originalbibliography\thebibliography
+\renewcommand{\thebibliography}[1]{%
+  \originalbibliography{#1}%
+  \setlength{\itemsep}{0pt}%
+  \setlength{\parsep}{0pt}%
+  \setlength{\parskip}{0pt}%
+  \setlength{\bibsep}{0pt}%
+  \raggedright
+}
+
+\begin{document}
+\title{Distilling COSMOS2020 Redshift Posteriors into Broadband Normalizing Flows}
+% Author names and affiliations intentionally omitted at the author's request.
+\input{authors}
+
+\begin{abstract}
+Deep multiband photometric redshifts can extend broadband training beyond
+available spectroscopy if their uncertainties are propagated.
+We present a framework that samples redshift labels from released
+COSMOS2020 LePhare distributions and trains a conditional normalizing flow.
+We select \NParent\ galaxies with HSC $i<25$ in $2''$ apertures and add
+noise to native CFHT $u$/HSC $grizy$ measurements to approximate LSST
+ten-year depths. On \NTest\ held-out spectroscopic galaxies, the flow
+trained on \NTrain\ probabilistic labels achieves
+$\sigma_{\rm NMAD}=\FlowScatter$, compared with \SpecScatter\ for a broadband
+flow trained on 22,604 spectroscopic labels. It also has lower scatter
+than the adopted six-band EAZY benchmark. Full-multiband LePhare remains
+more accurate, but its nominal 68\% intervals contain only 56.3\% of test
+redshifts, compared with 68.6\% for the bootstrapped flow.
+The flow comparison changes both training size and selection, and the
+test sample is spectroscopically selected. These results demonstrate
+probabilistic redshift transfer; they do not establish calibration for
+the full photometric population or measured Rubin photometry.
+\end{abstract}
+\keywords{Photometric redshift --- Astrostatistics --- Galaxy surveys}
+
+\input{intro}
+\input{methods}
+\input{bootstrapping}
+\input{results}
+\input{discussion}
+
+\section*{Data and Software Availability}
+The draft includes four executable figure notebooks, compact data snapshots,
+numerical results, and source-file hashes.
+The notebooks reproduce the figures without model retraining or network access.
+The underlying photometry and redshift PDFs are available from
+\href{https://irsa.ipac.caltech.edu/data/COSMOS/tables/cosmos2020/}{IRSA},
+and the spectroscopic compilation from its
+\href{https://github.com/cosmosastro/speczcompilation}{public repository}.
+We use NumPy, Astropy, Matplotlib, PyTorch, \texttt{nflows}, and
+EAZY-py; exact analysis and notebook dependencies are recorded with the code.
+EAZY templates and filter responses are credited to their
+\href{https://github.com/gbrammer/eazy-photoz}{public repository}.
+
+\clearpage
+\input{appendix}
+
+\bibliography{references}
+\end{document}

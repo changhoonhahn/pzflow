@@ -1,0 +1,44 @@
+{
+  "experiment": "Random catastrophic teacher-PDF mixture injection",
+  "fractions": [
+    0.01,
+    0.03,
+    0.05,
+    0.1
+  ],
+  "wrong_mode_weights": [
+    0.25,
+    0.5,
+    1.0
+  ],
+  "training_seed": 20261024,
+  "pattern_seed": 20261120,
+  "injection_seed": 20261121,
+  "n_training_seeds": 1,
+  "n_contamination_realizations": 1,
+  "max_steps": 20000,
+  "max_epochs": 200,
+  "n_train": 111952,
+  "n_validation": 23652,
+  "n_test": 5083,
+  "affected_selection": "Fixed nested random subset of training galaxies; never reselected between epochs.",
+  "wrong_mode": "Truncated Normal(mu, sigma=0.01*(1+mu)) on [0,10]; mu is a randomly drawn training-galaxy teacher median, rejected unless |mu-source_median|/(1+source_median)>0.30.",
+  "labels": "p_tilde=(1-lambda)*original_PDF+lambda*wrong_mode for selected training galaxies only; original labels retained for all other galaxies.",
+  "validation": "Original clean validation PDFs and original early-stopping rules; validation and test never corrupted.",
+  "pairing": "Same model initialization, shuffled training batches and photometric augmentation RNG as the original fit; independent shared injection RNG across scenarios.",
+  "reference": "Reused original no-injection checkpoint; predictions recomputed and checked against saved test results.",
+  "prepared_data_sha256": "f0971495a7f6daaa34922d7700d3e602e6dfd16e3657f03939961dd0abaa1b09",
+  "baseline_checkpoint_sha256": "b6179aaf9d634ad1848de837365e1b32ed6e4ce5f82f7ccd29812f5326ece17e",
+  "checks": {
+    "identity_and_main_rng_preservation": true,
+    "truncated_wrong_mode_sampling": true,
+    "partial_mixture_matches_analytic_cdf": true,
+    "validation_and_test_unaffected": true
+  },
+  "limitations": [
+    "Original COSMOS PDFs already contain errors: this is additional teacher-relative corruption, not known true-redshift contamination.",
+    "One paired training seed and one nested random corruption realization; test bootstrap intervals exclude training and contamination-realization variance.",
+    "Selected secure spectroscopy is not representative of the magnitude-limited parent.",
+    "No n(z) correction, teacher recalibration or removal of outliers; native CFHT/HSC filters with the existing LSST-like noise proxy."
+  ]
+}

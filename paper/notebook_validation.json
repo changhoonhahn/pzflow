@@ -1,0 +1,26 @@
+[
+  {
+    "notebook": "figure_01_selection.ipynb",
+    "code_cells": 3,
+    "inline_figures": 1,
+    "errors": 0
+  },
+  {
+    "notebook": "figure_02_accuracy.ipynb",
+    "code_cells": 3,
+    "inline_figures": 1,
+    "errors": 0
+  },
+  {
+    "notebook": "figure_03_calibration.ipynb",
+    "code_cells": 4,
+    "inline_figures": 1,
+    "errors": 0
+  },
+  {
+    "notebook": "figure_04_magnitude_dependence.ipynb",
+    "code_cells": 3,
+    "inline_figures": 1,
+    "errors": 0
+  }
+]

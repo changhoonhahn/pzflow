@@ -1,0 +1,50 @@
+[
+  {
+    "notebook": "figure_01_selection.ipynb",
+    "code_cells": 3,
+    "inline_figures": 1,
+    "errors": 0
+  },
+  {
+    "notebook": "figure_02_accuracy.ipynb",
+    "code_cells": 3,
+    "inline_figures": 1,
+    "errors": 0
+  },
+  {
+    "notebook": "figure_03_calibration.ipynb",
+    "code_cells": 4,
+    "inline_figures": 1,
+    "errors": 0
+  },
+  {
+    "notebook": "figure_04_magnitude_dependence.ipynb",
+    "code_cells": 3,
+    "inline_figures": 1,
+    "errors": 0
+  },
+  {
+    "notebook": "figure_all_models.ipynb",
+    "code_cells": 1,
+    "inline_figures": 2,
+    "errors": 0
+  },
+  {
+    "notebook": "figure_catastrophic_pdf_stress.ipynb",
+    "code_cells": 1,
+    "inline_figures": 3,
+    "errors": 0
+  },
+  {
+    "notebook": "figure_nz_ratio.ipynb",
+    "code_cells": 1,
+    "inline_figures": 1,
+    "errors": 0
+  },
+  {
+    "notebook": "figure_prior_correction.ipynb",
+    "code_cells": 1,
+    "inline_figures": 1,
+    "errors": 0
+  }
+]

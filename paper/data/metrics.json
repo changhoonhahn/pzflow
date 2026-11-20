@@ -1,0 +1,924 @@
+{
+  "flow": {
+    "data": {
+      "mode": "native_filter_lsst_like_noise_proxy",
+      "actual_input": null,
+      "n_parent_rows": 162239,
+      "n_valid_pdf": 162239,
+      "seed": 20261024,
+      "selection_counts": {
+        "catalog": 711918,
+        "clean_footprint": 711918,
+        "galaxy_template": 711918,
+        "i_magnitude_limit": 170003,
+        "i_snr": 170003,
+        "six_band_measurements": 162239
+      },
+      "magnitude_limit": {
+        "band": "HSC i",
+        "system": "AB",
+        "aperture_diameter_arcsec": 2,
+        "upper_exclusive": 25.0,
+        "minimum_snr": 5.0
+      },
+      "sampling": "All eligible catalog objects retained, independently of spectroscopic availability; no cap or oversampling",
+      "completeness": "Catalog-defined population; no injection/recovery completeness measurement. Combined detection, galaxy classification and finite-measurement cuts remain selection effects.",
+      "teacher_assumption": "COSMOS2020 photo-z distributions treated as unbiased; no recalibration or prior division",
+      "comparison": "same conditional-flow architecture; COSMOS-PDF training vs spec-z training; both use only six broadband fluxes/errors at inference",
+      "forecast_depths_5sigma_ab": [
+        25.6,
+        26.9,
+        26.9,
+        26.4,
+        25.6,
+        24.8
+      ],
+      "filter_warning": "CFHT u/HSC grizy are native COSMOS filters, NOT Rubin bandpasses",
+      "noise": "Add independent Gaussian noise with extra variance max(target_variance - reported_deep_variance,0); effective errors cannot improve over COSMOS errors",
+      "split": "disjoint 0.05 degree sky cells; 70/15/15 train/validation/test; all photometric test objects held out, only secure-spec subset scored",
+      "selection": "clean combined footprint; galaxy template lp_type=0; HSC i aperture magnitude limit and i SNR cut; finite six-band fluxes and positive errors; valid PDF; no other band SNR or redshift-agreement cut",
+      "counts": {
+        "0": {
+          "n": 111952,
+          "n_spec": 22604
+        },
+        "1": {
+          "n": 23652,
+          "n_spec": 4803
+        },
+        "2": {
+          "n": 26635,
+          "n_spec": 5083
+        }
+      }
+    },
+    "models": {
+      "cosmos_pdf_flow": {
+        "training": {
+          "n_train": 111952,
+          "n_validation": 23652,
+          "steps": 20000,
+          "epochs": 92,
+          "best_validation_loss": -0.8660402409732342,
+          "seconds": 59.527640792075545
+        },
+        "all": {
+          "n": 5083,
+          "bias": -0.006359569400785381,
+          "sigma_nmad": 0.01782682162607752,
+          "outlier_fraction": 0.028132992327365727,
+          "rmse_normalized": 0.15831756438697928,
+          "coverage68": 0.6858154633090694,
+          "coverage95": 0.9472752311626992,
+          "mean_negative_log_density": -1.712396502494812,
+          "median_width68": 0.06426534056663513
+        },
+        "z_gt2": {
+          "n": 167,
+          "bias": -0.008353996154117468,
+          "sigma_nmad": 0.054712443498818535,
+          "outlier_fraction": 0.1437125748502994,
+          "rmse_normalized": 0.1806657353765159,
+          "coverage68": 0.6347305389221557,
+          "coverage95": 0.9101796407185628,
+          "mean_negative_log_density": 0.2523992955684662,
+          "median_width68": 0.3950190544128418
+        }
+      },
+      "cosmos_pdf_matched_flow": {
+        "training": {
+          "n_train": 22604,
+          "n_validation": 4803,
+          "steps": 6615,
+          "epochs": 147,
+          "best_validation_loss": -1.0926348604261875,
+          "seconds": 22.15325724997092
+        },
+        "all": {
+          "n": 5083,
+          "bias": -0.005275564548487238,
+          "sigma_nmad": 0.02202238595670289,
+          "outlier_fraction": 0.03128073972063742,
+          "rmse_normalized": 0.15355702287420006,
+          "coverage68": 0.6989966555183946,
+          "coverage95": 0.9427503442848711,
+          "mean_negative_log_density": -1.5063929557800293,
+          "median_width68": 0.07668602466583252
+        },
+        "z_gt2": {
+          "n": 167,
+          "bias": -0.01808573665141526,
+          "sigma_nmad": 0.05753422203699024,
+          "outlier_fraction": 0.16766467065868262,
+          "rmse_normalized": 0.1883754447436013,
+          "coverage68": 0.6646706586826348,
+          "coverage95": 0.8982035928143712,
+          "mean_negative_log_density": 0.37029191851615906,
+          "median_width68": 0.45859038829803467
+        }
+      },
+      "broadband_spec_flow": {
+        "training": {
+          "n_train": 22604,
+          "n_validation": 4803,
+          "steps": 7515,
+          "epochs": 167,
+          "best_validation_loss": -1.1722814440727234,
+          "seconds": 21.302810374996625
+        },
+        "all": {
+          "n": 5083,
+          "bias": 0.00014380667695264437,
+          "sigma_nmad": 0.021039939359054596,
+          "outlier_fraction": 0.030690537084398978,
+          "rmse_normalized": 0.15062744418803653,
+          "coverage68": 0.6596498131024985,
+          "coverage95": 0.9396025968915994,
+          "mean_negative_log_density": -1.5882717370986938,
+          "median_width68": 0.06471067667007446
+        },
+        "z_gt2": {
+          "n": 167,
+          "bias": -0.024273285800877023,
+          "sigma_nmad": 0.0544086806909864,
+          "outlier_fraction": 0.17365269461077845,
+          "rmse_normalized": 0.18820890103357815,
+          "coverage68": 0.7065868263473054,
+          "coverage95": 0.9281437125748503,
+          "mean_negative_log_density": 0.3773445188999176,
+          "median_width68": 0.7216107845306396
+        }
+      }
+    },
+    "paired_bootstrap": {
+      "cosmos_pdf_flow": {
+        "sigma_nmad": {
+          "flow_minus_baseline_95ci": [
+            -0.004006115878412216,
+            -0.002363662072719209
+          ]
+        },
+        "outlier_fraction": {
+          "flow_minus_baseline_95ci": [
+            -0.005513476293527447,
+            0.0007869368483179215
+          ]
+        },
+        "mean_negative_log_density": {
+          "flow_minus_baseline_95ci": [
+            -0.1461143046617508,
+            -0.10003237128257751
+          ]
+        }
+      },
+      "cosmos_pdf_matched_flow": {
+        "sigma_nmad": {
+          "flow_minus_baseline_95ci": [
+            0.00019593004326531432,
+            0.0015805227099573598
+          ]
+        },
+        "outlier_fraction": {
+          "flow_minus_baseline_95ci": [
+            -0.0015738736966358462,
+            0.002365728900255756
+          ]
+        },
+        "mean_negative_log_density": {
+          "flow_minus_baseline_95ci": [
+            0.0657254159450531,
+            0.09749888479709626
+          ]
+        }
+      }
+    },
+    "limitations": [
+      "Forecast uses native COSMOS filters, not measured LSST bandpasses",
+      "Spectroscopic test selection is not representative of the full photometric population",
+      "Held-out IDs are excluded from our model fitting; independence from the original COSMOS template/zero-point calibration has not been audited",
+      "COSMOS redshift distributions are assumed unbiased; their supplied widths and tails are retained without recalibration",
+      "Baseline is a spec-supervised six-band flow, not an official Rubin photo-z product or a template-fitting code",
+      "One training seed; paired galaxy bootstrap excludes training variance and spatial covariance.",
+      "The magnitude limit defines an aperture-selected catalog population, not proven detection completeness.",
+      "Full versus matched COSMOS PDF training changes both sample size and selection."
+    ],
+    "run_settings": {
+      "seed": 20261024,
+      "max_epochs": 200,
+      "max_steps": 20000,
+      "n_training_seeds": 1
+    }
+  },
+  "selection": {
+    "census_and_unique_ids_verified": true,
+    "disjoint_spatial_cells_verified": true,
+    "magnitude_definition": "Native HSC i AB, 2 arcsec aperture, before forecast noise",
+    "input_catalog_rows": 711918,
+    "eligible_rows": 162239,
+    "fraction_with_six_band_measurements": 0.9543302177020405,
+    "full_train_median_i": 24.179551265204186,
+    "spec_train_median_i": 22.74475404716211,
+    "test_photometric_median_i": 24.16837241530675,
+    "test_spec_median_i": 22.69067525249994,
+    "secure_spec_fraction": 0.20026011008450495,
+    "magnitude_bins": [
+      {
+        "i_min": 0,
+        "i_max": 21,
+        "n_photometric": 3171,
+        "n_secure_spec": 3112,
+        "secure_spec_fraction": 0.9813938820561338,
+        "n_test_photometric": 490,
+        "n_test_spec": 483
+      },
+      {
+        "i_min": 21,
+        "i_max": 22,
+        "n_photometric": 7300,
+        "n_secure_spec": 6099,
+        "secure_spec_fraction": 0.8354794520547946,
+        "n_test_photometric": 1223,
+        "n_test_spec": 1022
+      },
+      {
+        "i_min": 22,
+        "i_max": 23,
+        "n_photometric": 17897,
+        "n_secure_spec": 10001,
+        "secure_spec_fraction": 0.5588087388947869,
+        "n_test_photometric": 2915,
+        "n_test_spec": 1546
+      },
+      {
+        "i_min": 23,
+        "i_max": 24,
+        "n_photometric": 41063,
+        "n_secure_spec": 9447,
+        "secure_spec_fraction": 0.23006112558751188,
+        "n_test_photometric": 6874,
+        "n_test_spec": 1530
+      },
+      {
+        "i_min": 24,
+        "i_max": 24.5,
+        "n_photometric": 38004,
+        "n_secure_spec": 2541,
+        "secure_spec_fraction": 0.0668613830123145,
+        "n_test_photometric": 6225,
+        "n_test_spec": 337
+      },
+      {
+        "i_min": 24.5,
+        "i_max": 25,
+        "n_photometric": 54804,
+        "n_secure_spec": 1290,
+        "secure_spec_fraction": 0.023538427851981607,
+        "n_test_photometric": 8908,
+        "n_test_spec": 165
+      }
+    ],
+    "limitations": [
+      "Finite-measurement retention is not detection completeness.",
+      "The secure-spec subset is not a random subset of the parent, even after the magnitude limit.",
+      "No inverse selection weights or photometric-only truth labels are available."
+    ]
+  },
+  "templates": {
+    "n_test": 5083,
+    "selection": "Same 5083 secure-spec test IDs from the i<25 magnitude-limited experiment",
+    "point_estimate": "Posterior median for every model in models; published LePhare catalog point estimate also reported separately",
+    "models": {
+      "cosmos_pdf_flow": {
+        "n": 5083,
+        "bias": -0.006359569400785381,
+        "sigma_nmad": 0.01782682162607752,
+        "outlier_fraction": 0.028132992327365727,
+        "rmse_normalized": 0.15831756438697928,
+        "coverage68": 0.6858154633090694,
+        "coverage95": 0.9472752311626992,
+        "median_width68": 0.06426534056663513
+      },
+      "broadband_spec_flow": {
+        "n": 5083,
+        "bias": 0.00014380667695264437,
+        "sigma_nmad": 0.021039939359054596,
+        "outlier_fraction": 0.030690537084398978,
+        "rmse_normalized": 0.15062744418803653,
+        "coverage68": 0.6596498131024985,
+        "coverage95": 0.9396025968915994,
+        "median_width68": 0.06471067667007446
+      },
+      "lephare_full_cosmos": {
+        "n": 5083,
+        "bias": -0.002830820543985355,
+        "sigma_nmad": 0.010049074373909098,
+        "outlier_fraction": 0.023017902813299233,
+        "rmse_normalized": 0.11272175346587304,
+        "coverage68": 0.5634467833956325,
+        "coverage95": 0.8195947275231162,
+        "median_width68": 0.025881078299789806
+      },
+      "eazy_six_band": {
+        "n": 5083,
+        "bias": 0.0010855350752862643,
+        "sigma_nmad": 0.031021726389949354,
+        "outlier_fraction": 0.13574660633484162,
+        "rmse_normalized": 0.2868588269909125,
+        "coverage68": 0.6004328152665749,
+        "coverage95": 0.8461538461538461,
+        "median_width68": 0.08427129749566309
+      },
+      "eazy_rprior": {
+        "n": 5083,
+        "bias": -0.0017257322395909562,
+        "sigma_nmad": 0.02849161480199729,
+        "outlier_fraction": 0.10112138500885304,
+        "rmse_normalized": 0.17415093641950685,
+        "coverage68": 0.598858941569939,
+        "coverage95": 0.8555970883336612,
+        "median_width68": 0.07491666446101086
+      }
+    },
+    "lephare_published_catalog_point": {
+      "n": 5083,
+      "bias": -0.002872290040181493,
+      "sigma_nmad": 0.00998697165195833,
+      "outlier_fraction": 0.023017902813299233,
+      "rmse_normalized": 0.1127152272067081,
+      "coverage68": 0.5634467833956325,
+      "coverage95": 0.8195947275231162,
+      "median_width68": 0.025881078299789806
+    },
+    "eazy_mode_point": {
+      "n": 5083,
+      "bias": -0.0014991525447729669,
+      "sigma_nmad": 0.03367360732672342,
+      "outlier_fraction": 0.147353924847531,
+      "rmse_normalized": 0.25811402547676393,
+      "coverage68": 0.6004328152665749,
+      "coverage95": 0.8461538461538461,
+      "median_width68": 0.08427129749566309
+    },
+    "eazy_rprior_mode_point": {
+      "n": 5083,
+      "bias": -0.004335954742717611,
+      "sigma_nmad": 0.0326191615504588,
+      "outlier_fraction": 0.12020460358056266,
+      "rmse_normalized": 0.18880173819592827,
+      "coverage68": 0.598858941569939,
+      "coverage95": 0.8555970883336612,
+      "median_width68": 0.07491666446101086
+    },
+    "paired_bootstrap": {
+      "broadband_spec_flow": {
+        "sigma_nmad": {
+          "flow_minus_baseline_95ci": [
+            -0.0040456641744207435,
+            -0.0024421461836969705
+          ]
+        },
+        "outlier_fraction": {
+          "flow_minus_baseline_95ci": [
+            -0.005518394648829432,
+            0.0005902026362384419
+          ]
+        },
+        "coverage68": {
+          "flow_minus_baseline_95ci": [
+            0.011184339956718454,
+            0.04131418453669089
+          ]
+        }
+      },
+      "lephare_full_cosmos": {
+        "sigma_nmad": {
+          "flow_minus_baseline_95ci": [
+            0.007026890452983622,
+            0.008583710533107915
+          ]
+        },
+        "outlier_fraction": {
+          "flow_minus_baseline_95ci": [
+            0.001377139484556365,
+            0.009153059216997831
+          ]
+        },
+        "coverage68": {
+          "flow_minus_baseline_95ci": [
+            0.10602006688963211,
+            0.14109777690340347
+          ]
+        }
+      },
+      "eazy_six_band": {
+        "sigma_nmad": {
+          "flow_minus_baseline_95ci": [
+            -0.014522858864390916,
+            -0.012027576063395893
+          ]
+        },
+        "outlier_fraction": {
+          "flow_minus_baseline_95ci": [
+            -0.11686995868581547,
+            -0.09856384025181979
+          ]
+        },
+        "coverage68": {
+          "flow_minus_baseline_95ci": [
+            0.06836022034231752,
+            0.10112138500885304
+          ]
+        }
+      },
+      "eazy_rprior": {
+        "sigma_nmad": {
+          "flow_minus_baseline_95ci": [
+            -0.011898472945974426,
+            -0.009434484658107579
+          ]
+        },
+        "outlier_fraction": {
+          "flow_minus_baseline_95ci": [
+            -0.0812512295888255,
+            -0.0653059216997836
+          ]
+        },
+        "coverage68": {
+          "flow_minus_baseline_95ci": [
+            0.0692209325201653,
+            0.10368876647649024
+          ]
+        }
+      }
+    },
+    "caveats": [
+      "Released LePhare sees full deep multiband COSMOS photometry, not just the six noisy inputs. It is the training teacher, not an independent equal-input competitor.",
+      "The teacher is assumed unbiased during training but evaluated as released against spectroscopy.",
+      "LePhare PDFs use dz=0.01; piecewise-linear reconstruction limits sub-grid uncertainty accuracy.",
+      "Test spectroscopy is selected and much brighter than the parent photometric population.",
+      "Independence from the released COSMOS template/zero-point calibration has not been audited.",
+      "Flow results use one seed; bootstrap excludes training variance and spatial covariance.",
+      "Native CFHT u/HSC grizy with approximate LSST-like noise, not measured Rubin photometry.",
+      "Six-band EAZY is an untuned default-template configuration with a flat redshift prior, not a calibrated survey pipeline or a claim about the best achievable template-fitting performance.",
+      "R-prior sensitivity uses the supplied standard R magnitude prior with HSC r and catalog total-flux correction; it has not been calibrated for this population."
+    ],
+    "eazy_configuration": {
+      "code": "EAZY-py",
+      "version": "0.8.7",
+      "n_objects": 5083,
+      "n_templates": 12,
+      "seconds": 55.2321625839686,
+      "params": {
+        "CATALOG_FILE": "results/template_comparison/eazy_catalog.fits",
+        "CATALOG_FORMAT": "fits",
+        "FILTERS_RES": "data/eazy-photoz-master/filters/FILTER.RES.latest",
+        "TEMPLATES_FILE": "data/eazy-photoz-master/templates/fsps_full/tweak_fsps_QSF_12_v3.param",
+        "TEMP_ERR_FILE": "data/eazy-photoz-master/templates/uvista_nmf/template_error_10.def",
+        "WAVELENGTH_FILE": "data/eazy-photoz-master/templates/uvista_nmf/lambda.def",
+        "PRIOR_FILE": "data/eazy-photoz-master/templates/prior_F160W_TAO.dat",
+        "OUTPUT_DIRECTORY": "results/template_comparison",
+        "MAIN_OUTPUT_FILE": "eazy_six_band",
+        "PRIOR_ABZP": 23.9,
+        "APPLY_PRIOR": "n",
+        "FIX_ZSPEC": "n",
+        "Z_MIN": 0.001,
+        "Z_MAX": 10.0,
+        "Z_STEP": 0.005,
+        "MW_EBV": 0.0,
+        "CAT_HAS_EXTCORR": "y",
+        "SYS_ERR": 0.01,
+        "TEMP_ERR_A2": 0.2,
+        "VERBOSITY": 0,
+        "ADD_CGM": "n",
+        "NOT_OBS_THRESHOLD": -10000000000.0
+      },
+      "filters": [
+        {
+          "band": "u",
+          "filter_id": 409,
+          "name": "CFHT-megaprime-u9302-atmos+inst lambda_c= 3.6410e+03 AB-Vega= 0.705 w95=709.7"
+        },
+        {
+          "band": "g",
+          "filter_id": 314,
+          "name": "g_HSC.txt http://cosmos.astro.caltech.edu/page/filterset lambda_c=4798.2 AB-Vega=-0.089"
+        },
+        {
+          "band": "r",
+          "filter_id": 315,
+          "name": "r_HSC.txt http://cosmos.astro.caltech.edu/page/filterset lambda_c=6218.4 AB-Vega=0.223"
+        },
+        {
+          "band": "i",
+          "filter_id": 316,
+          "name": "i_HSC.txt http://cosmos.astro.caltech.edu/page/filterset lambda_c=7727.0 AB-Vega=0.468"
+        },
+        {
+          "band": "z",
+          "filter_id": 317,
+          "name": "z_HSC.txt http://cosmos.astro.caltech.edu/page/filterset lambda_c=8908.2 AB-Vega=0.522"
+        },
+        {
+          "band": "y",
+          "filter_id": 318,
+          "name": "y_HSC.txt http://cosmos.astro.caltech.edu/page/filterset lambda_c=9775.1 AB-Vega=0.740"
+        }
+      ],
+      "galactic_extinction": "Per-object catalog EBV; released COSMOS coefficients [4.807,3.69,2.715,2.0,1.515,1.298]; fluxes and errors corrected together",
+      "same_input_check": "Uses saved noisy test fluxes and uncertainties, with deterministic Galactic correction; all six bands retained including negative fluxes",
+      "prior": "Flat in redshift: no apparent-magnitude or beta prior. Default H160 prior cannot be applied to these six filters.",
+      "calibration": "Default 12 tweaked FSPS templates, 1% SYS_ERR and template error amplitude 0.20; no zero-point training or test-label tuning",
+      "resource_archive_sha256": "111fad2328e974ad601c220a8d3bf0d3562606039f9161f4335c44576024e965",
+      "resource_source": "https://github.com/gbrammer/eazy-photoz",
+      "extinction_source": "https://irsa.ipac.caltech.edu/data/COSMOS/tables/cosmos2020/misc/COSMOS2020_prepare_apertures.txt",
+      "limitations": [
+        "Initial untuned EAZY configuration, not an optimized or survey-calibrated benchmark.",
+        "Library native-band curves are used; exact exposure-dependent HSC passbands are not modeled.",
+        "Six-band posterior degeneracies depend strongly on the chosen prior and templates."
+      ]
+    },
+    "eazy_rprior_configuration": {
+      "code": "EAZY-py",
+      "version": "0.8.7",
+      "n_objects": 5083,
+      "n_templates": 12,
+      "seconds": 11.45190291700419,
+      "params": {
+        "CATALOG_FILE": "results/template_comparison/eazy_catalog.fits",
+        "CATALOG_FORMAT": "fits",
+        "FILTERS_RES": "data/eazy-photoz-master/filters/FILTER.RES.latest",
+        "TEMPLATES_FILE": "data/eazy-photoz-master/templates/fsps_full/tweak_fsps_QSF_12_v3.param",
+        "TEMP_ERR_FILE": "data/eazy-photoz-master/templates/uvista_nmf/template_error_10.def",
+        "WAVELENGTH_FILE": "data/eazy-photoz-master/templates/uvista_nmf/lambda.def",
+        "PRIOR_FILE": "results/template_comparison/prior_R_zmax7_py.dat",
+        "OUTPUT_DIRECTORY": "results/template_comparison",
+        "MAIN_OUTPUT_FILE": "eazy_six_band",
+        "PRIOR_ABZP": 23.9,
+        "APPLY_PRIOR": "y",
+        "FIX_ZSPEC": "n",
+        "Z_MIN": 0.001,
+        "Z_MAX": 10.0,
+        "Z_STEP": 0.005,
+        "MW_EBV": 0.0,
+        "CAT_HAS_EXTCORR": "y",
+        "SYS_ERR": 0.01,
+        "TEMP_ERR_A2": 0.2,
+        "VERBOSITY": 0,
+        "ADD_CGM": "n",
+        "NOT_OBS_THRESHOLD": -10000000000.0,
+        "PRIOR_FILTER": 315
+      },
+      "filters": [
+        {
+          "band": "u",
+          "filter_id": 409,
+          "name": "CFHT-megaprime-u9302-atmos+inst lambda_c= 3.6410e+03 AB-Vega= 0.705 w95=709.7"
+        },
+        {
+          "band": "g",
+          "filter_id": 314,
+          "name": "g_HSC.txt http://cosmos.astro.caltech.edu/page/filterset lambda_c=4798.2 AB-Vega=-0.089"
+        },
+        {
+          "band": "r",
+          "filter_id": 315,
+          "name": "r_HSC.txt http://cosmos.astro.caltech.edu/page/filterset lambda_c=6218.4 AB-Vega=0.223"
+        },
+        {
+          "band": "i",
+          "filter_id": 316,
+          "name": "i_HSC.txt http://cosmos.astro.caltech.edu/page/filterset lambda_c=7727.0 AB-Vega=0.468"
+        },
+        {
+          "band": "z",
+          "filter_id": 317,
+          "name": "z_HSC.txt http://cosmos.astro.caltech.edu/page/filterset lambda_c=8908.2 AB-Vega=0.522"
+        },
+        {
+          "band": "y",
+          "filter_id": 318,
+          "name": "y_HSC.txt http://cosmos.astro.caltech.edu/page/filterset lambda_c=9775.1 AB-Vega=0.740"
+        }
+      ],
+      "galactic_extinction": "Per-object catalog EBV; released COSMOS coefficients [4.807,3.69,2.715,2.0,1.515,1.298]; fluxes and errors corrected together",
+      "same_input_check": "Uses saved noisy test fluxes and uncertainties, with deterministic Galactic correction; all six bands retained including negative fluxes",
+      "aperture_correction": "Catalog total_off2 common scale applied to all fluxes/errors to define total r magnitude for prior",
+      "prior": "Supplied prior_R_zmax7.dat applied to extinction-corrected HSC r; approximate R-to-HSC-r mapping; no beta prior",
+      "calibration": "Default 12 tweaked FSPS templates, 1% SYS_ERR and template error amplitude 0.20; no zero-point training or test-label tuning",
+      "resource_archive_sha256": "111fad2328e974ad601c220a8d3bf0d3562606039f9161f4335c44576024e965",
+      "resource_source": "https://github.com/gbrammer/eazy-photoz",
+      "extinction_source": "https://irsa.ipac.caltech.edu/data/COSMOS/tables/cosmos2020/misc/COSMOS2020_prepare_apertures.txt",
+      "limitations": [
+        "Initial untuned EAZY configuration, not an optimized or survey-calibrated benchmark.",
+        "Library native-band curves are used; exact exposure-dependent HSC passbands are not modeled.",
+        "Six-band posterior degeneracies depend strongly on the chosen prior and templates."
+      ]
+    }
+  },
+  "teacher_audit": {
+    "n_input": 34792,
+    "n_valid_pdf": 34792,
+    "n_rejected_pdf": 0,
+    "rejected_ids": [],
+    "pdf_source_url": "https://irsa.ipac.caltech.edu/data/COSMOS/tables/cosmos2020/PZ/COSMOS2020_CLASSIC_R1_v2.1_LEPHARE_PZ_p3.fits.gz",
+    "matched_pdf_cache_sha256": "deb5bc5d532c0ea9c4d2cff37fe9ff6b41f3e38af98ad53cc565d1df656dcda9",
+    "seed": 20261023,
+    "n_random_references_per_galaxy": 64,
+    "n_bootstrap": 200,
+    "magnitude": "HSC i magnitude in 2 arcsec aperture, no total_off2 correction",
+    "pdf": "COSMOS2020 Classic v2.1 LePhare grid; normalized independently, piecewise-linear density; no recalibration",
+    "tarp": "Mass P(|Z-r|<=|zspec-r|); empirical CDF of masses vs nominal credibility",
+    "references_global": "Uniform(0,10)",
+    "references_local": "Uniform(max(0,PDF_median-0.25*(1+PDF_median)), min(10,PDF_median+0.25*(1+PDF_median)))",
+    "bands": "95% pointwise galaxy-bootstrap intervals; do not include spatial dependence, selection or spec-z systematics",
+    "pdf_median_minus_catalog_median_abs_percentiles": {
+      "50": 0.00021320794519560492,
+      "90": 0.0007531826499363516,
+      "99": 0.0018404707404081917,
+      "100": 0.0025250886844107034
+    },
+    "n_missing_magnitude": 20,
+    "synthetic_controls": {
+      "calibrated_tarp_max_deviation": 0.006799979209899942,
+      "narrowed_equal_tailed_68": 0.3837999999523163
+    },
+    "groups": [
+      {
+        "group": "All galaxies",
+        "n": 34792,
+        "pit_near_zero_fraction": 0.029604506783168543,
+        "pit_near_one_fraction": 0.0536617613244424,
+        "tarp_global_0.50": 0.6074182987213135,
+        "tarp_global_0.50_95ci": [
+          0.6027628660202027,
+          0.6115249186754227
+        ],
+        "tarp_local_0.50": 0.48860639333724976,
+        "tarp_local_0.50_95ci": [
+          0.4876690298318863,
+          0.4898525536060333
+        ],
+        "equal_tailed_0.50": 0.40517935156822205,
+        "equal_tailed_0.50_95ci": [
+          0.4007774695754051,
+          0.4103888899087906
+        ],
+        "tarp_global_0.68": 0.742124617099762,
+        "tarp_global_0.68_95ci": [
+          0.7381394773721695,
+          0.746187125146389
+        ],
+        "tarp_local_0.68": 0.6356579661369324,
+        "tarp_local_0.68_95ci": [
+          0.6328585803508758,
+          0.6382839053869247
+        ],
+        "equal_tailed_0.68": 0.5567659139633179,
+        "equal_tailed_0.68_95ci": [
+          0.5520205959677696,
+          0.5622082814574242
+        ],
+        "tarp_global_0.95": 0.9176907539367676,
+        "tarp_global_0.95_95ci": [
+          0.9151346474885941,
+          0.920231381058693
+        ],
+        "tarp_local_0.95": 0.8713093400001526,
+        "tarp_local_0.95_95ci": [
+          0.8688669502735138,
+          0.8739337369799614
+        ],
+        "equal_tailed_0.95": 0.8179466724395752,
+        "equal_tailed_0.95_95ci": [
+          0.8141404435038566,
+          0.8218692570924759
+        ],
+        "catalog_interval_n": 34722,
+        "catalog_68_interval_coverage": 0.5886757675249121,
+        "weaver_symmetric_max_width_coverage": 0.6293128276020966
+      },
+      {
+        "group": "i < 22.5",
+        "n": 14215,
+        "pit_near_zero_fraction": 0.01709461836088639,
+        "pit_near_one_fraction": 0.052831516004220896,
+        "tarp_global_0.50": 0.6214155554771423,
+        "tarp_global_0.50_95ci": [
+          0.6144301518797874,
+          0.6278865456581115
+        ],
+        "tarp_local_0.50": 0.497153103351593,
+        "tarp_local_0.50_95ci": [
+          0.4955472096800804,
+          0.49885677397251127
+        ],
+        "equal_tailed_0.50": 0.41793879866600037,
+        "equal_tailed_0.50_95ci": [
+          0.40942138358950614,
+          0.42470100745558736
+        ],
+        "tarp_global_0.68": 0.7610083818435669,
+        "tarp_global_0.68_95ci": [
+          0.7550253421068192,
+          0.7672757372260094
+        ],
+        "tarp_local_0.68": 0.6480346322059631,
+        "tarp_local_0.68_95ci": [
+          0.6442364692687989,
+          0.6524996370077133
+        ],
+        "equal_tailed_0.68": 0.57242351770401,
+        "equal_tailed_0.68_95ci": [
+          0.5643264040350914,
+          0.5796728745102883
+        ],
+        "tarp_global_0.95": 0.9368250966072083,
+        "tarp_global_0.95_95ci": [
+          0.9337283447384834,
+          0.9398793488740921
+        ],
+        "tarp_local_0.95": 0.8865788578987122,
+        "tarp_local_0.95_95ci": [
+          0.8830636262893676,
+          0.8908656477928162
+        ],
+        "equal_tailed_0.95": 0.8365810513496399,
+        "equal_tailed_0.95_95ci": [
+          0.8297537565231323,
+          0.8415054678916931
+        ],
+        "catalog_interval_n": 14185,
+        "catalog_68_interval_coverage": 0.622277053225238,
+        "weaver_symmetric_max_width_coverage": 0.6469510045823053
+      },
+      {
+        "group": "22.5 \u2264 i < 24",
+        "n": 15560,
+        "pit_near_zero_fraction": 0.031748071979434446,
+        "pit_near_one_fraction": 0.04652956298200514,
+        "tarp_global_0.50": 0.6087815165519714,
+        "tarp_global_0.50_95ci": [
+          0.6025242954492569,
+          0.6142830476164818
+        ],
+        "tarp_local_0.50": 0.489946186542511,
+        "tarp_local_0.50_95ci": [
+          0.4882044494152069,
+          0.4914793066680431
+        ],
+        "equal_tailed_0.50": 0.4161311089992523,
+        "equal_tailed_0.50_95ci": [
+          0.40866162776947024,
+          0.42302861288189886
+        ],
+        "tarp_global_0.68": 0.7456850409507751,
+        "tarp_global_0.68_95ci": [
+          0.7400071784853935,
+          0.7512577176094055
+        ],
+        "tarp_local_0.68": 0.6406762003898621,
+        "tarp_local_0.68_95ci": [
+          0.6369450390338898,
+          0.6444899782538414
+        ],
+        "equal_tailed_0.68": 0.5704370141029358,
+        "equal_tailed_0.68_95ci": [
+          0.562398798763752,
+          0.578679296374321
+        ],
+        "tarp_global_0.95": 0.9180099368095398,
+        "tarp_global_0.95_95ci": [
+          0.9147772207856179,
+          0.9211065620183945
+        ],
+        "tarp_local_0.95": 0.8761557936668396,
+        "tarp_local_0.95_95ci": [
+          0.8727854728698731,
+          0.8802480310201645
+        ],
+        "equal_tailed_0.95": 0.8252570629119873,
+        "equal_tailed_0.95_95ci": [
+          0.8187596306204796,
+          0.8303341865539551
+        ],
+        "catalog_interval_n": 15523,
+        "catalog_68_interval_coverage": 0.594859241126071,
+        "weaver_symmetric_max_width_coverage": 0.6416285511821168
+      },
+      {
+        "group": "24 \u2264 i < 25",
+        "n": 3850,
+        "pit_near_zero_fraction": 0.05948051948051948,
+        "pit_near_one_fraction": 0.07090909090909091,
+        "tarp_global_0.50": 0.567337691783905,
+        "tarp_global_0.50_95ci": [
+          0.5542343705892563,
+          0.5779223769903183
+        ],
+        "tarp_local_0.50": 0.46830764412879944,
+        "tarp_local_0.50_95ci": [
+          0.4644388072192669,
+          0.47178336679935456
+        ],
+        "equal_tailed_0.50": 0.33974024653434753,
+        "equal_tailed_0.50_95ci": [
+          0.3248961172997952,
+          0.35559739992022515
+        ],
+        "tarp_global_0.68": 0.6832792162895203,
+        "tarp_global_0.68_95ci": [
+          0.6701889201998711,
+          0.6953332737088204
+        ],
+        "tarp_local_0.68": 0.5934699773788452,
+        "tarp_local_0.68_95ci": [
+          0.5858083263039588,
+          0.6010511189699173
+        ],
+        "equal_tailed_0.68": 0.4812987148761749,
+        "equal_tailed_0.68_95ci": [
+          0.4667402572929859,
+          0.4974675431847572
+        ],
+        "tarp_global_0.95": 0.8675771355628967,
+        "tarp_global_0.95_95ci": [
+          0.8591103032231331,
+          0.8766345471143723
+        ],
+        "tarp_local_0.95": 0.823327898979187,
+        "tarp_local_0.95_95ci": [
+          0.8141431510448456,
+          0.8324026986956596
+        ],
+        "equal_tailed_0.95": 0.7542856931686401,
+        "equal_tailed_0.95_95ci": [
+          0.7402272984385491,
+          0.765467518568039
+        ],
+        "catalog_interval_n": 3847,
+        "catalog_68_interval_coverage": 0.4868728879646478,
+        "weaver_symmetric_max_width_coverage": 0.5495191057967247
+      },
+      {
+        "group": "i \u2265 25",
+        "n": 1147,
+        "pit_near_zero_fraction": 0.05492589363557106,
+        "pit_near_one_fraction": 0.1037489102005231,
+        "tarp_global_0.50": 0.5531413555145264,
+        "tarp_global_0.50_95ci": [
+          0.5389504820108414,
+          0.5712749257683754
+        ],
+        "tarp_local_0.50": 0.4332089126110077,
+        "tarp_local_0.50_95ci": [
+          0.42346474155783653,
+          0.4434322454035282
+        ],
+        "equal_tailed_0.50": 0.3190932869911194,
+        "equal_tailed_0.50_95ci": [
+          0.28766346871852877,
+          0.3452702574431896
+        ],
+        "tarp_global_0.68": 0.6613039374351501,
+        "tarp_global_0.68_95ci": [
+          0.6453806340694428,
+          0.6787127926945686
+        ],
+        "tarp_local_0.68": 0.5564379692077637,
+        "tarp_local_0.68_95ci": [
+          0.541258080303669,
+          0.5716849759221078
+        ],
+        "equal_tailed_0.68": 0.4298169016838074,
+        "equal_tailed_0.68_95ci": [
+          0.3975588381290436,
+          0.45425022691488265
+        ],
+        "tarp_global_0.95": 0.8451530933380127,
+        "tarp_global_0.95_95ci": [
+          0.8325604811310768,
+          0.8607317879796028
+        ],
+        "tarp_local_0.95": 0.7784846425056458,
+        "tarp_local_0.95_95ci": [
+          0.7604382395744324,
+          0.795371749997139
+        ],
+        "equal_tailed_0.95": 0.7018308639526367,
+        "equal_tailed_0.95_95ci": [
+          0.675610302388668,
+          0.730645141005516
+        ],
+        "catalog_interval_n": 1147,
+        "catalog_68_interval_coverage": 0.4306887532693984,
+        "weaver_symmetric_max_width_coverage": 0.5117698343504795
+      }
+    ],
+    "caveats": [
+      "Validation conditional on heterogeneous successful spectroscopy; not a population-wide posterior correctness test.",
+      "z grid resolution is 0.01; sub-grid PDF shape unavailable and reconstruction may affect narrow PDFs.",
+      "Spec-z is treated as truth; remaining wrong redshifts or crossmatches contribute to failures.",
+      "Extreme PIT values include probabilities rounded to zero in released PDFs."
+    ]
+  }
+}

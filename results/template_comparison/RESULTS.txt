@@ -1,0 +1,52 @@
+Same-object comparison: COSMOS posterior-label flow versus template fitting
+
+All results use the same 5,083 held-out secure public spectroscopic galaxies
+from the revised i<25 AB (2 arcsec aperture) magnitude-limited experiment.
+Every main row uses posterior medians for point estimates.
+
+Method                         NMAD    Outliers   Coverage68  Coverage95
+COSMOS-PDF-trained flow         .01783   2.81%      68.6%       94.7%
+EAZY, supplied R prior          .02849  10.11%      59.9%       85.6%
+EAZY, flat redshift prior       .03102  13.57%      60.0%       84.6%
+Released full-COSMOS LePhare    .01005   2.30%      56.3%       82.0%
+
+Flows and EAZY use the same saved noisy CFHT-u / HSC-grizy measurements.
+EAZY uses 12 standard tweaked FSPS templates, default 1% systematic flux error
+and 0.20 template-error amplitude, with Galactic correction from the catalog.
+The R-prior sensitivity uses the supplied R prior with HSC r and catalog
+aperture-to-total scaling; no population-specific prior was fit. Both EAZY
+runs are untuned: no test-label calibration or zero-point/template training.
+The flow was previously trained on 111,952 COSMOS posterior-labelled objects;
+EAZY has not received equivalent training/calibration information. This is a
+practical comparison, not an isolation of architectures or prior choices.
+
+Against this EAZY R-prior configuration, the flow has 37% lower NMAD and 72%
+fewer outliers, with coverage closer to nominal. A survey-calibrated EAZY or
+LePhare six-band pipeline could perform differently; this does not establish
+superiority over optimally configured template fitting.
+
+Full COSMOS LePhare has substantially more photometric information at inference
+than the six-band flow, including the deep intermediate/narrow-band and IR data.
+It is also the teacher used for training, not an independent equal-input code.
+Its point estimates are more accurate, but its PDFs under-cover on this test
+sample. The flow's median 68% interval width is .0643 versus .0259 for LePhare.
+Broader flow PDFs and near-nominal aggregate coverage do not by themselves
+prove conditional calibration or population-wide validity.
+
+Median normalized biases: flow -.00636, EAZY R prior -.00173, flat EAZY +.00109,
+LePhare -.00283. Thus the flow's median bias is larger in absolute value.
+The published LePhare catalog point estimator gives virtually the same scatter
+(.00999) and identical outlier rate (2.30%) as the reconstructed PDF median.
+EAZY's interpolated mode is also saved/scored separately; R-prior mode NMAD
+is .03262 and outlier rate 12.02%, so the comparison does not rely on choosing
+a worse point estimator for EAZY.
+
+Caveats: selected spectroscopy is much brighter than the photometric parent;
+original teacher calibration may have used overlapping spectra; one flow seed;
+bootstrap excludes spatial covariance/training variance; released LePhare PDF
+grid dz=.01 limits subgrid coverage accuracy. This is a native-COSMOS-filter
+experiment with approximate LSST-like noise, not actual Rubin photometry.
+
+Code, data preparation and commands: analysis/TEMPLATE_BASELINES.txt.
+Machine-readable metrics/configuration: comparison_metrics.json.
+Plots: flow_vs_templates.png/.pdf. Subsample results: binned_metrics.csv.

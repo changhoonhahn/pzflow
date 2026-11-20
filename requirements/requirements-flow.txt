@@ -1,0 +1,5 @@
+numpy==2.5.4
+torch==2.14.1
+nflows==0.14
+astropy==8.0.2
+matplotlib==3.11.2

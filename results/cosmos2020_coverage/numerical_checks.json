@@ -1,0 +1,22 @@
+{
+  "alternate_grid_model": "piecewise-constant density on midpoint-centered grid cells",
+  "coverage_sensitivity": {
+    "all": {
+      "0.68": 0.5386870544952863,
+      "0.95": 0.8025695562198206
+    },
+    "i<22.5": {
+      "0.68": 0.5434400281392895,
+      "0.95": 0.8115371086880057
+    },
+    "i>=25": {
+      "0.68": 0.42894507410636445,
+      "0.95": 0.7009590235396687
+    }
+  },
+  "actual_pdf_self_consistency_max_deviation": {
+    "global": 0.003068208694458008,
+    "local": 0.0023692035675049183
+  },
+  "actual_pdf_self_consistency_central68": 0.6802138422625891
+}

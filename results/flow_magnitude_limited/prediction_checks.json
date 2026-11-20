@@ -1,0 +1,12 @@
+{
+  "cosmos_pdf_flow": {
+    "inference_max_abs_quantile_difference": 1.4852905305673403e-07
+  },
+  "cosmos_pdf_matched_flow": {
+    "inference_max_abs_quantile_difference": 1.0821533180660481e-07
+  },
+  "broadband_spec_flow": {
+    "inference_max_abs_quantile_difference": 4.411621112865305e-08
+  },
+  "matched_sample_counts_verified": true
+}

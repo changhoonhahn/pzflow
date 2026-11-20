@@ -1,0 +1,31 @@
+{
+  "reference": "https://github.com/galactic-ai/SpenderQ/tree/main/doc/methods_paper",
+  "inspected_date": "2026-11-19",
+  "reference_notebook_sha256": {
+    "spenderq_validation.ipynb": "946a1fd9cf1e348b46a576b7f4b129b976351253229984ebd0d15099832d3d3e",
+    "spenderq_uncertainty.ipynb": "c6e2dbb17c8db135b994475de1e414bf7dc2cbe5c700db4dd20d258a9efe4969"
+  },
+  "shared_style": "notebooks/project_plot_style.py",
+  "png_figures": [
+    "paper/figures/fig01_selection.png",
+    "paper/figures/fig02_accuracy.png",
+    "paper/figures/fig03_calibration.png",
+    "paper/figures/fig04_magnitude_dependence.png",
+    "results/cosmos2020_coverage/coverage_by_redshift.png",
+    "results/cosmos2020_coverage/pit_and_tarp_residuals.png",
+    "results/cosmos2020_coverage/tarp_coverage.png",
+    "results/cosmos2020_specz/r_magnitude_vs_specz.png",
+    "results/cosmos2020_specz/specz_vs_photoz.png",
+    "results/coverage_prior_correction/all_models_coverage.png",
+    "results/coverage_prior_correction/all_models_pit.png",
+    "results/coverage_prior_correction/coverage_prior_comparison.png",
+    "results/coverage_prior_correction/redshift_distributions_and_ratio.png",
+    "results/flow_experiment/flow_vs_broadband.png",
+    "results/flow_experiment/residuals_and_pit.png",
+    "results/flow_magnitude_limited/flow_vs_broadband.png",
+    "results/flow_magnitude_limited/residuals_and_pit.png",
+    "results/flow_magnitude_limited/sample_selection.png",
+    "results/template_comparison/flow_vs_templates.png"
+  ],
+  "model_retraining": false
+}

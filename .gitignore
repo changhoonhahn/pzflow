@@ -221,3 +221,21 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local research inputs and generated deliveries. Preserve all existing files locally.
+/data/*
+!/data/README.md
+/tmp/
+/output/
+/paper/reference/
+*.aux
+*.blg
+*.fdb_latexmk
+*.fls
+*.out
+.DS_Store
+
+# Bulk recomputable posterior caches; compact figure inputs are versioned.
+/results/coverage_prior_correction/cosmos_full_flow_probability_grid.npz
+/results/template_comparison/*_posteriors.npz
+/results/template_comparison/*.fits

@@ -1,0 +1,81 @@
+\section{Introduction}\label{sec:intro}
+Photometric redshifts (photo-$z$s) enable studies of galaxy evolution and
+cosmology with millions to billions of galaxies. They provide distances
+for tracing galaxy populations and mapping the matter distribution with
+weak gravitational lensing. Photo-$z$ errors, however, already limit
+cosmological analyses. In the Hyper Suprime-Cam (HSC) Year-3 joint
+clustering and weak-lensing analysis, accounting for residual photo-$z$
+uncertainty lowered the inferred $S_8=\sigma_8\sqrt{\Omega_m/0.3}$ from
+$0.791^{+0.018}_{-0.020}$ to $0.763^{+0.040}_{-0.036}$ and roughly doubled
+its error bars \citep{miyatake2023,hahn2024}. Current photo-$z$s also exhibit
+biases and underestimated uncertainties. Even COSMOS2020, which uses deep
+multiband imaging, shows magnitude-dependent biases and apparent
+overconfidence for faint galaxies in spectroscopic comparisons
+\citep{weaver2022}.
+
+Photo-$z$ calibration will be more demanding for the Vera C.~Rubin
+Observatory's Legacy Survey of Space and Time \citep[LSST;][]{ivezic2019}.
+LSST will image approximately $18{,}000\,\mathrm{deg}^2$ in six broadband
+filters, $ugrizy$, over ten years and is expected to observe approximately
+20 billion galaxies. Exploiting this statistical power requires accurate
+redshift distributions for the galaxies used in cosmological analyses
+\citep{desc2018}. Calibration data that reach the depth and span the galaxy
+populations of LSST will be a major bottleneck.
+
+Secure spectroscopic redshifts provide the reference standard for photo-$z$
+training and calibration. DESI achieves redshift precisions of approximately
+$10$--$40\,\mathrm{km\,s^{-1}}$ for its main galaxy samples \citep{lan2023}.
+These errors are negligible compared with broadband photo-$z$ uncertainties,
+so reliable spectroscopic measurements can be treated as known labels.
+Self-organizing-map methods group galaxies with similar photometry and use
+reference redshifts to calibrate their redshift distributions. SOMPZ connects
+these groups in deep and wide-field photometry to infer tomographic redshift
+distributions \citep{buchs2019,myles2021}. In DES, its reference sample
+combines spectroscopy with high-quality multiband photo-$z$s.
+
+The main limitation of spectroscopic calibration is selection. Spectroscopic
+samples preferentially contain brighter galaxies and objects with identifiable
+spectral features. Photo-$z$ estimators trained on these samples can therefore
+inherit their selection biases. Restricting analyses to galaxies represented
+by spectroscopy reduces this risk but discards statistical power. The
+KiDS-1000 SOM-gold selection, for example, reduced the effective source density
+by approximately 20\% \citep{hildebrandt2021,giblin2021}. Obtaining
+representative spectroscopy at LSST depths would require substantial telescope
+time. \citet{newman2015} estimate that conventional training requires at least
+approximately 30,000 spectra across multiple independent fields, reaching
+the faint limits of the science sample.
+
+Deep multiband imaging offers an alternative. COSMOS2020 combines more than
+30 photometric bands across approximately $2\,\mathrm{deg}^2$, including
+12 optical intermediate bands and two narrow bands \citep{weaver2022}.
+These measurements constrain redshift more precisely than broadband photometry
+alone: normalized redshift scatter is below 1\% for $i<21$ galaxies and
+reaches approximately 5\% at $25<i<27$. These photo-$z$s cannot be treated
+as exact labels. Their released redshift probability distributions, however,
+allow us to propagate their uncertainties into a broadband estimator.
+Their calibration must also be tested: \citet{weaver2022} find underestimated
+uncertainties at faint magnitudes, while noting that spectroscopic selection
+complicates this comparison.
+
+In this work, we present a framework that propagates deep multiband redshift
+uncertainties into broadband photo-$z$s using normalizing flows. We sample
+redshifts from the deep-field probability distributions and broadband
+measurements from a photometric transfer model, then train a conditional flow
+on these samples. Normalizing flows can represent complex, multimodal
+distributions and provide efficient likelihood evaluation and sampling
+\citep{durkan2019,papamakarios2021}. Under a conditional sufficiency assumption,
+this procedure marginalizes over the deep observations to estimate
+$p(z\given x)$ for broadband measurements $x$. It propagates the input
+redshift uncertainties but does not automatically correct their systematic
+errors.
+
+We demonstrate this framework with public COSMOS2020 data. We use the released
+multiband redshift distributions to train a flow on CFHT $u$/HSC $grizy$
+photometry, adding noise where needed to approximate LSST ten-year depths.
+The experiment retains the native COSMOS filters and uses an explicit noise
+model for the transfer. On a spatially held-out spectroscopic sample, we
+compare our predictions with a spectroscopically trained broadband flow,
+broadband template fitting, and full-multiband template-fitting estimates.
+We test both redshift accuracy and uncertainty calibration to assess whether
+probabilistic labels can extend broadband training to larger and fainter
+samples.

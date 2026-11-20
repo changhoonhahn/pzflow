@@ -1,0 +1,42 @@
+{
+  "n_test": 5083,
+  "numerical_models_verified": [
+    "cosmos_pdf_flow",
+    "broadband_spec_flow",
+    "eazy_rprior",
+    "lephare_full_cosmos"
+  ],
+  "bibliography_keys_verified": [
+    "brammer2008",
+    "buchs2019",
+    "desc2018",
+    "durkan2019",
+    "giblin2021",
+    "hahn2024",
+    "hildebrandt2021",
+    "ilbert2006",
+    "ivezic2019",
+    "khostovan2025",
+    "lan2023",
+    "lemos2023",
+    "miyatake2023",
+    "myles2021",
+    "newman2015",
+    "papamakarios2021",
+    "rubindepths",
+    "weaver2022"
+  ],
+  "pdf_pages": 9,
+  "overfull_boxes": 0,
+  "unresolved_references": 0,
+  "author_metadata_unset": true,
+  "main_figures": 4,
+  "appendix_figures": 1,
+  "main_tables": 1,
+  "executed_notebooks": [
+    "figure_01_selection.ipynb",
+    "figure_02_accuracy.ipynb",
+    "figure_03_calibration.ipynb",
+    "figure_04_magnitude_dependence.ipynb"
+  ]
+}

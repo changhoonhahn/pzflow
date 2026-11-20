@@ -1,0 +1,12 @@
+\begin{deluxetable*}{lrrrrrr}
+\tablecaption{Performance on the same 5,083 held-out spectroscopic galaxies.\label{tab:results}}
+\tablewidth{0pt}
+\tablehead{\colhead{Method} & \colhead{$N_{\rm train}$} & \colhead{$b$} & \colhead{$\sigma_{\rm NMAD}$} & \colhead{$\eta$ (\%)} & \colhead{$C_{68}$ (\%)} & \colhead{$C_{95}$ (\%)}}
+\startdata
+Bootstrapped flow & 111,952 & -0.0064 & 0.0178 & 2.81 & 68.6 & 94.7 \\
+Broadband flow & 22,604 & +0.0001 & 0.0210 & 3.07 & 66.0 & 94.0 \\
+EAZY, supplied R prior & \nodata & -0.0017 & 0.0285 & 10.11 & 59.9 & 85.6 \\
+LePhare, full COSMOS & \nodata & -0.0028 & 0.0100 & 2.30 & 56.3 & 82.0 \\
+\enddata
+\tablecomments{All point estimates are posterior medians; $C_\alpha$ is equal-tailed interval coverage. The first three methods use six broadband measurements at inference; released LePhare uses the full deep COSMOS photometry and is the training teacher. EAZY is not calibrated on this population. An ellipsis indicates no training set fitted in this experiment, not absence of prior calibration in the released methods.}
+\end{deluxetable*}
