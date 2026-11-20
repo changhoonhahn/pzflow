@@ -1869,5 +1869,15 @@
     "prepared_objects": 153641,
     "secure_test_objects": 5279,
     "notes": "Different selection from the current 5083-object secure test sample; do not mix IDs."
+  },
+  "active_workflow": {
+    "scripts": [
+      "bin/lsst_like.py",
+      "bin/match_cosmos.py",
+      "bin/train_flows.py"
+    ],
+    "parent": "data/parent.npz",
+    "shared_utilities": "src/pzflow/utils.py",
+    "note": "The 52 recorded snapshots include historical resources and derived products. New run manifests record current source hashes."
   }
 }

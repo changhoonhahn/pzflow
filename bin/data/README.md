@@ -18,7 +18,7 @@ Paths in those files are relative to the project root.
 | Teacher redshift PDFs | [Classic R1 v2.1 LePhare PZ](https://irsa.ipac.caltech.edu/data/COSMOS/tables/cosmos2020/PZ/COSMOS2020_CLASSIC_R1_v2.1_LEPHARE_PZ_p3.fits.gz) | `classic_lephare_complete.fits.gz` |
 | Spectroscopic labels and evaluation redshifts | [COSMOS compilation DR1.1 unique catalog](https://github.com/cosmosastro/speczcompilation/tree/main/specz_compilation) | `specz_compilation_COSMOS_DR1.1_unique.fits` plus `_surveys.list` |
 | EAZY templates, filter curves, and priors | [eazy-photoz commit f651e94](https://github.com/gbrammer/eazy-photoz/tree/f651e94d91042a84906090a66d2a3fec75504e21) | `data/eazy-photoz-master/` and cached tar archive |
-| LSST-like noise prescription | [Rubin key numbers](https://rubinobservatory.org/for-scientists/rubin-101/key-numbers), frozen numeric forecast values below | Parameters in `src/pzflow/data.py`; no Rubin catalog |
+| LSST-like noise prescription | [Rubin key numbers](https://rubinobservatory.org/for-scientists/rubin-101/key-numbers), frozen numeric forecast values below | Parameters in `bin/lsst_like.py`; no Rubin catalog |
 
 ### COSMOS photometry
 
@@ -46,7 +46,7 @@ Its first row contains the 1,001-point redshift grid, 0 through 10 with spacing
 0.01. Subsequent rows contain an explicit Classic ID followed by PDF values.
 **Join on that ID; do not assume a row number is the ID.** Normalize each PDF
 using trapezoidal integration and use the piecewise-linear density/CDF in
-`src/pzflow/pdf.py` or the training sampler in `src/pzflow/flow.py`.
+`src/pzflow/utils.py`.
 These are full deep multiband posteriors, not fits using only narrow bands.
 No Farmer catalog or released full-COSMOS EAZY CZ archive was used.
 
@@ -76,7 +76,7 @@ its quality/recency rules. The code uses the supplied Classic ID match, not a
 new positional nearest-neighbor match. This heterogeneous collection of
 successful spectra is not a magnitude-complete or representative parent sample.
 
-### EAZY resources and preprocessing
+### Historical EAZY resources and preprocessing
 
 The original cached GitHub tarball has SHA256
 `111fad2328e974ad601c220a8d3bf0d3562606039f9161f4335c44576024e965`.
@@ -89,7 +89,7 @@ EAZY-py 0.8.7 uses `FILTER.RES.latest`, filter IDs **409, 314, 315, 316, 317,
 318** for u,g,r,i,z,y; the 12 `tweak_fsps_QSF_12_v3` templates; the UVISTA
 `template_error_10.def` and `lambda.def` files; and, for the prior run,
 `prior_R_zmax7.dat`. The F160W prior is a configuration default, not an applied
-prior in the flat run. Library software versions are in `requirements.txt`.
+prior in the flat run. The historical environment is archived in `tmp/three_step_before`; EAZY is not a dependency of the current workflow.
 
 EAZY applies per-object `ebv_mw` with coefficients
 `[4.807, 3.690, 2.715, 2.000, 1.515, 1.298]`, multiplying **both** fluxes and
@@ -101,7 +101,7 @@ EAZY setup was tuned on the spectroscopic test labels.
 
 ## Selection, splits, and simulated observations
 
-`bin/prepare.py` retains the full eligible census: combined footprint flag 0,
+`bin/lsst_like.py` retains the full eligible census: combined footprint flag 0,
 galaxy template `lp_type=0`, native HSC-i aperture magnitude `<25`, native i-band
 SNR `>=5`, finite six-band fluxes, positive finite native/effective errors,
 `abs(flux)<1e8` sentinel rejection, and nonnegative finite nonempty PDFs.
@@ -125,46 +125,71 @@ sigma_added = sqrt(maximum(sigma_target**2 - sigma_native**2, 0))
 ```
 
 Noise is added to the **fluxes**, and effective errors are supplied as inputs.
-Training resamples independent Gaussian noise each pass. Test photometry is a
-single fixed realization (seed 20261025), saved as `observed_flux` and `fluxerr`
-in `results/flow_magnitude_limited/heldout_predictions.npz`. All methods use that
-same test realization. These are approximate point-source forecast depths
-applied to aperture errors, not a Rubin selection or full instrument simulation.
+Training resamples independent Gaussian noise each pass. Validation and test use
+the fixed realization generated for **all** selected parent objects with seed
+20261025, saved in `data/parent.npz` as `flux` and `fluxerr`. Both flows use the
+same test realization. Historical analyses generated noise for the secure-test
+subset alone; the new all-parent realization differs, even with the same seed.
+These are approximate point-source forecast depths applied to aperture errors,
+not a Rubin selection or full instrument simulation.
 
-## Local products and analysis order
+## Three-step workflow and one parent dataset
 
-```text
-COSMOS TAP extracts + full PZ + spec compilation
-  -> bin/specz.py                          results/cosmos2020_specz/
-  -> bin/prepare.py                       data/flow_magnitude_limited/prepared.npz
-  -> bin/train.py                         results/flow_magnitude_limited/
-  -> bin/run_eazy.py [--r-prior]           results/template_comparison/
-  -> bin/compare.py                       same-object template/flow comparison
-  -> bin/coverage.py                      results/cosmos2020_coverage/
-  -> bin/prior.py; bin/prior_models.py     results/coverage_prior_correction/
-  -> bin/stress.py                        results/catastrophic_pdf_stress/
-  -> bin/export.py                        results/figure_data/ and tex/ numeric macros
-  -> bin/notebooks.py --all               local figures and executed notebooks
+From the repository root:
+
+```bash
+python -m pip install -e .
+python bin/lsst_like.py
+python bin/match_cosmos.py
+python bin/train_flows.py
 ```
 
-Run EAZY once without and once with `--r-prior` for both configurations.
-`bin/train.py` trains PDF-full, PDF-matched, and spec-z controls with the same
-architecture. Training is never triggered by executing the figure notebooks.
-The corruption sweep resumes completed cases and collects figure inputs after
-all twelve retrainings finish. Existing COSMOS errors remain in its baseline.
+1. `lsst_like.py` selects the full magnitude-limited population and writes the
+   intermediate `data/lsst_like.npz`, with native and degraded fluxes/errors,
+   added-noise scales, IDs, positions, native i magnitude, and spatial splits.
+2. `match_cosmos.py` joins full COSMOS PDFs and secure spectroscopy by Classic
+   ID. It retains galaxies without spectra (NaN spec-z), validates every PDF,
+   and generates 32 continuous redshift draws per galaxy. The **single analysis
+   parent** is `data/parent.npz`. All intermediate arrays are carried into it;
+   additional fields are `grid`, `pdf`, `z_draws`, `zspec`, `has_specz`,
+   `spec_flag`, and `spec_survey`. Missing or invalid PDFs stop the script rather
+   than silently selecting a different parent. `--pdfs path/to/cache.npz` can
+   read an ID-checked `id,grid,pdf` cache instead of the full FITS image.
+3. `train_flows.py` reads only that parent and trains exactly two models:
+   **bootstrapped**, using all training galaxies and fresh draws from their full
+   PDFs each batch; **specz**, using the secure-spec subset of those galaxies.
+   Cached draws provide fixed teacher validation labels. Both use the same
+   architecture, train/validation/test cells, training-only feature scaling,
+   and held-out broadband inputs. COSMOS PDFs are assumed unbiased; no prior
+   correction is applied. Evaluation uses the same 5,083 secure test objects.
 
-`results/figure_data/{selection,predictions}.npz` are plotting snapshots, not new
-observations. Quantile columns are 0.025, 0.16, 0.50, 0.84, 0.975; PIT is the CDF
-at spec-z. `prepared.npz` includes Classic IDs, flux/errors, added-noise scales,
-redshifts where available, splits/cells, i magnitude, grid, and teacher PDFs.
-Prior sensitivity uses 135,604 non-test parent PDFs and 27,407 non-test spectra,
-with log(1+z) smoothing and 0.1% uniform regularization. The same empirical
-ratio is a sensitivity test for EAZY, not an exact replacement of its prior.
+`results/flows/` contains two checkpoints, histories, `run.json`, and one
+`predictions.npz` keyed by the common test IDs. Quantile columns are 0.025,
+0.16, 0.50, 0.84, 0.975; PIT is the conditional CDF at spec-z. Source hashes,
+selection, seeds, and counts are saved in local JSON manifests. Choose another
+`--output` directory to retain additional runs; an existing completed run is
+not overwritten. Use `--epochs 1 --max-steps 20 --output results/smoke` for a
+pipeline check, not a scientific result.
 
-The archived `flow_experiment/` caches (153,641 objects; 5,279 secure test
-objects) describe an earlier selection. Do not mix their IDs or metrics with
-the current magnitude-limited experiment. Older provenance JSON may name
-`analysis/`, `notebooks/`, or `paper/data/`; these are historical paths.
+Execute `nb/comparison.ipynb` to generate accuracy, PIT/coverage, and magnitude
+dependence plots from the new run. Plot uncertainty is a 95% interval from 200
+paired galaxy-bootstrap resamples; it excludes retraining variance and cosmic
+variance. Magnitude points are bin medians, counts are printed on the plot, and
+bands use alpha=0.5. Save executed copies under `results/notebooks_executed/`.
+Source notebooks remain without outputs. Spectroscopic selection limits all
+reported metrics; they cannot establish coverage of the full parent population.
+
+## Historical products
+
+The earlier pipeline and eight source notebooks are retained locally under
+`tmp/three_step_before/`, and in Git history. Existing `results/` and `tex/`
+products remain intact. The 52-file manifest and checksums include historical
+EAZY resources, prior-correction results, figure snapshots, and old prepared
+caches; these are provenance records, not alternate active analysis parents.
+Reproducing those earlier paper figures requires the archived workflow.
+The `flow_experiment/` caches (153,641 objects; 5,279 secure test objects) describe
+an older selection and must not be mixed with the current parent. The previous
+162,239-object magnitude-limited results also use the older test-noise draw.
 
 ## Restoring and verifying data
 
@@ -178,8 +203,6 @@ Verify the recorded snapshots from the project root:
 
 ```bash
 shasum -a 256 -c bin/data/SHA256SUMS
-python bin/check.py
-python bin/notebooks.py --all
 make -C tex
 ```
 

@@ -1,15 +1,25 @@
-"""Conditional flow, PDF-label sampling, training, and predictive diagnostics."""
+#!/usr/bin/env python3
+"""Train COSMOS-PDF and spec-z flows from the same canonical parent catalog.
+
+Both use only six broadband fluxes/errors at inference. The PDF flow uses all
+training galaxies; the spec-z flow uses their secure-spec subset. Scoring uses
+one common held-out secure-spec sample. No prior division is applied.
+"""
+import argparse
+import copy
+import hashlib
+import json
 from pathlib import Path
-import copy, json, time
+import sys
+import time
 import numpy as np
 import torch
 from nflows.flows.base import Flow
 from nflows.distributions.normal import StandardNormal
 from nflows.transforms.base import CompositeTransform
 from nflows.transforms.autoregressive import MaskedPiecewiseRationalQuadraticAutoregressiveTransform
-from .paths import ROOT
-OUT=ROOT/'results/flow_experiment'
-SEED=20261024
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src'))
+from pzflow.utils import PDFSampler, coverage
 
 def make_flow(context_features=12):
     transforms=[MaskedPiecewiseRationalQuadraticAutoregressiveTransform(
@@ -25,27 +35,6 @@ def z_to_t(z):
 
 
 def t_to_z(t):return 10*torch.sigmoid(t*1.1-2.2)
-
-
-class PDFSampler:
-    def __init__(self,grid,pdf):
-        self.grid=grid
-        area=(pdf[:,:-1]+pdf[:,1:])*np.diff(grid)[None,:]/2
-        self.c=np.c_[np.zeros(len(pdf)),np.cumsum(area,axis=1)].astype(np.float32)
-        norm=self.c[:,-1].copy();assert np.all(norm>0)
-        self.c/=norm[:,None]
-        self.p=(pdf/norm[:,None]).astype(np.float32)
-    def draw(self,idx,rng):
-        u=rng.random(len(idx));lo=np.zeros(len(idx),int);hi=np.full(len(idx),len(self.grid)-1,int)
-        for _ in range(11):
-            mid=(lo+hi)//2;right=self.c[idx,mid]<=u
-            lo=np.where(right,mid,lo);hi=np.where(right,hi,mid)
-        j=np.minimum(lo,len(self.grid)-2)
-        a=self.p[idx,j];s=(self.p[idx,j+1]-a)/np.diff(self.grid)[j]
-        w=np.maximum(u-self.c[idx,j],0)
-        den=a+np.sqrt(np.maximum(a*a+2*s*w,0))
-        t=np.divide(2*w,den,out=np.zeros(len(idx)),where=den>0)
-        return (self.grid[j]+np.clip(t,0,np.diff(self.grid)[j])).astype(np.float32)
 
 
 def raw_features(flux,err):
@@ -82,20 +71,24 @@ def posterior_summary(model,ctx,zspec):
     return np.concatenate(quant),np.concatenate(pit),np.concatenate(nll)
 
 
-def fit(name,teacher,flux,err,extra,zspec,splits,sampler,mean,scale,epochs,max_steps,matched=False):
-    rng=np.random.default_rng(SEED)
+def fit(name, teacher, data, sampler, mean, scale, args):
+    flux, err, extra = data["native_flux"], data["fluxerr"], data["sigma_added"]
+    zspec, splits = data["zspec"], data["split"]
+    epochs, max_steps = args.epochs, args.max_steps
+    rng=np.random.default_rng(args.seed)
     train=np.flatnonzero(splits==0);valid=np.flatnonzero(splits==1)
-    if not teacher or matched:
+    if not teacher:
         train=train[np.isfinite(zspec[train])];valid=valid[np.isfinite(zspec[valid])]
-    assert len(train)>100 and len(valid)>100
-    torch.manual_seed(SEED)
+    if not len(train) or not len(valid):
+        raise ValueError('Empty training or validation sample')
+    torch.manual_seed(args.seed)
     model=make_flow();opt=torch.optim.AdamW(model.parameters(),lr=8e-4,weight_decay=1e-5)
     scheduler=torch.optim.lr_scheduler.ReduceLROnPlateau(opt,patience=3,factor=.5)
-    # Fixed validation labels and noise; no spec-z used for teacher validation.
+    # Fixed parent fluxes and cached labels; no spec-z used for teacher validation.
     vi=rng.choice(valid,min(len(valid),4096),replace=False)
+    vy=data["z_draws"][vi, :4].reshape(-1) if teacher else zspec[vi].astype(np.float32)
     if teacher:vi=np.repeat(vi,4)
-    vy=sampler.draw(vi,rng) if teacher else zspec[vi].astype(np.float32)
-    vf=flux[vi]+rng.normal(size=(len(vi),6)).astype(np.float32)*extra[vi]
+    vf=data["flux"][vi]
     vx=context(vf,err[vi],mean,scale);vt=z_to_t(torch.from_numpy(vy[:,None]))
     best=float('inf');best_state=None;bad=0;step=0;history=[];start=time.monotonic()
     for epoch in range(epochs):
@@ -125,14 +118,68 @@ def fit(name,teacher,flux,err,extra,zspec,splits,sampler,mean,scale,epochs,max_s
     model.load_state_dict(best_state);model.eval()
     torch.save(dict(state_dict=best_state,feature_mean=mean,feature_scale=scale,
                     model='two conditional RQS autoregressive transforms; 16 bins; hidden64; blocks2',
-                    n_train=len(train),n_validation=len(valid),seed=SEED),OUT/f'{name}.pt')
-    (OUT/f'{name}_history.json').write_text(json.dumps(history,indent=2)+'\n')
+                    n_train=len(train),n_validation=len(valid),seed=args.seed),args.output/f'{name}.pt')
+    (args.output/f'{name}_history.json').write_text(json.dumps(history,indent=2)+'\n')
     return model,dict(n_train=len(train),n_validation=len(valid),steps=step,epochs=len(history),best_validation_loss=best,seconds=time.monotonic()-start)
 
 
 def metrics(z,q,pit,nll):
+    c68, c95 = coverage(pit)
     r=(q[:,2]-z)/(1+z)
     return dict(n=len(z),bias=float(np.median(r)),sigma_nmad=float(1.4826*np.median(abs(r-np.median(r)))),
                 outlier_fraction=float(np.mean(abs(r)>.15)),rmse_normalized=float(np.sqrt(np.mean(r*r))),
-                coverage68=float(np.mean((z>=q[:,1])&(z<=q[:,3]))),coverage95=float(np.mean((z>=q[:,0])&(z<=q[:,4]))),
+                coverage68=float(c68),coverage95=float(c95),
                 mean_negative_log_density=float(np.mean(nll)),median_width68=float(np.median(q[:,3]-q[:,1])))
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--data', type=Path, default=Path('data/parent.npz'))
+    p.add_argument('--output', type=Path, default=Path('results/flows'))
+    p.add_argument('--seed', type=int, default=20261024)
+    p.add_argument('--epochs', type=int, default=200)
+    p.add_argument('--max-steps', type=int, default=20000)
+    p.add_argument('--threads', type=int, default=4)
+    args = p.parse_args()
+    if args.epochs < 1 or args.max_steps < 1:
+        p.error('epochs and max-steps must be positive')
+    if (args.output/'run.json').exists():
+        p.error('Output already contains a run; choose a new --output directory')
+    torch.set_num_threads(args.threads)
+    with np.load(args.data) as c:
+        data = {k: c[k] for k in c.files}
+    if not json.loads(str(data['metadata'])).get('canonical_parent'):
+        raise ValueError('Use the canonical parent from match_cosmos.py')
+    if data['grid'][0] != 0 or data['grid'][-1] != 10:
+        raise ValueError('This flow transform requires the COSMOS 0 <= z <= 10 grid')
+    train = data['split'] == 0
+    features = raw_features(data['native_flux'][train], data['fluxerr'][train])
+    mean, scale = features.mean(0), np.maximum(features.std(0), .1)
+    test = np.flatnonzero((data['split'] == 2) & data['has_specz'])
+    if not len(test):
+        raise ValueError('No held-out secure spectroscopy')
+    if np.any((data['zspec'][data['has_specz']] <= 0) | (data['zspec'][data['has_specz']] >= 10)):
+        raise ValueError('Secure labels must lie inside the model support (0,10)')
+    args.output.mkdir(parents=True, exist_ok=True)
+    sampler = PDFSampler(data['grid'], data.pop('pdf'))
+    predictions = {k: data[k][test] for k in ['id', 'zspec', 'imag', 'flux', 'fluxerr']}
+    ctx = context(data['flux'][test], data['fluxerr'][test], mean, scale)
+    run = dict(parent=str(args.data.resolve()), parent_sha256='', seed=args.seed,
+               epochs_limit=args.epochs, steps_limit=args.max_steps,
+               comparison='full COSMOS-PDF parent vs secure-spec subset; shared architecture, splits and inference inputs',
+               teacher_assumption='unbiased COSMOS PDFs, no prior division',
+               photometry='native CFHT/HSC filters with LSST-like noise, not Rubin observations', models={})
+    with args.data.open('rb') as f:
+        run['parent_sha256'] = hashlib.file_digest(f, 'sha256').hexdigest()
+    for name, teacher in [('bootstrapped', True), ('specz', False)]:
+        model, info = fit(name, teacher, data, sampler, mean, scale, args)
+        q, pit, nll = posterior_summary(model, ctx, data['zspec'][test])
+        predictions.update({name+'_quantiles': q, name+'_pit': pit, name+'_nll': nll})
+        info['metrics'] = metrics(data['zspec'][test], q, pit, nll)
+        run['models'][name] = info
+    np.savez_compressed(args.output/'predictions.npz', **predictions)
+    (args.output/'run.json').write_text(json.dumps(run, indent=2)+'\n')
+    print(json.dumps(run, indent=2), flush=True)
+
+
+if __name__ == '__main__':
+    main()
