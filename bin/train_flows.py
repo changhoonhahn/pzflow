@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
-"""Train COSMOS-PDF and spec-z flows from the same canonical parent catalog.
+'''
 
-Both use only six broadband fluxes/errors at inference. The PDF flow uses all
-training galaxies; the spec-z flow uses their secure-spec subset. Scoring uses
-one common held-out secure-spec sample. No prior division is applied.
-"""
 
+Train COSMOS-PDF and spec-z flows from the same catalog constructed using
+`match_cosmos.py`.
+
+COMOS-PDF: bootstrap posterior from narrow-band photometry (y) 
+    p(z | x) = int p(z | y) p(y | x) dy
+
+spec-z Flow: Traing flow directly on spectroscopic redshifts. 
+    p(z | x) 
+
+
+'''
 import argparse
 import copy
 import hashlib
@@ -106,6 +113,10 @@ def posterior_summary(model, ctx, zspec):
 
 
 def fit(name, teacher, data, sampler, mean, scale, args):
+    '''
+    '''
+
+
     flux, err, extra = data['native_flux'], data['fluxerr'], data['sigma_added']
     zspec, splits = data['zspec'], data['split']
     epochs, max_steps = args.epochs, args.max_steps
@@ -246,17 +257,20 @@ def main():
     p.add_argument('--max-steps', type=int, default=20000)
     p.add_argument('--threads', type=int, default=4)
     args = p.parse_args()
+
     if args.epochs < 1 or args.max_steps < 1:
         p.error('epochs and max-steps must be positive')
     if (args.output / 'run.json').exists():
         p.error('Output already contains a run; choose a new --output directory')
     torch.set_num_threads(args.threads)
+
     with np.load(args.data) as c:
         data = {k: c[k] for k in c.files}
     if not json.loads(str(data['metadata'])).get('canonical_parent'):
         raise ValueError('Use the canonical parent from match_cosmos.py')
     if data['grid'][0] != 0 or data['grid'][-1] != 10:
         raise ValueError('This flow transform requires the COSMOS 0 <= z <= 10 grid')
+    
     # Estimate preprocessing only on training photometry, shared by both models.
     train = data['split'] == 0
     features = raw_features(data['native_flux'][train], data['fluxerr'][train])
