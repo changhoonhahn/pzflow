@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Build the ONE analysis parent: LSST-like fluxes + COSMOS PDFs + secure spec-z.
+'''
 
-NPZ PDF caches must contain id, grid, pdf. The default source is the public
-compressed LePhare FITS image, streamed without loading the complete catalog.
-"""
+
+Build dataset for the project combining LSST-like fluxes + COSMOS PDFs + secure spec-z.
+
+
+'''
 
 import argparse
 import gzip
@@ -77,8 +79,10 @@ def main():
     p.add_argument('--draws', type=int, default=32)
     p.add_argument('--seed', type=int, default=20261026)
     a = p.parse_args()
+
     if a.draws < 4:
         p.error('--draws must be at least 4 (fixed validation labels)')
+
     with np.load(a.photometry) as c:
         data = {k: c[k] for k in c.files if k != 'metadata'}
         meta = json.loads(str(c['metadata']))
@@ -86,10 +90,9 @@ def main():
     if not np.all(np.diff(ids) > 0):
         raise ValueError('Photometry IDs must be unique and sorted')
     grid, pdf = read_pdfs(a.pdfs, ids)
-    sampler = PDFSampler(
-        grid, pdf
-    )  # reject invalid PDFs rather than silently change the population
-    # Cached draws fix the teacher validation targets. Training will resample the
+    sampler = PDFSampler(grid, pdf)  # reject invalid PDFs rather than silently change the population
+
+    # Cached draws fix the narrowband validation targets. Training will resample the
     # full PDFs, so it is not restricted to this finite set of redshifts.
     rng = np.random.default_rng(a.seed)
     draws = np.empty((len(ids), a.draws), dtype='f4')
@@ -97,6 +100,7 @@ def main():
         draws[start : start + 2048] = sampler.draw(
             np.arange(start, min(start + 2048, len(ids))), rng, a.draws
         )
+
     # Attach public, secure galaxy spectra by supplied Classic ID. These cuts
     # do not require agreement with photo-z and do not define the parent population.
     with fits.open(a.spectroscopy, memmap=True) as h:
@@ -119,13 +123,17 @@ def main():
         j = np.searchsorted(sid, ids)
         match = j < len(sid)
         match[match] &= sid[j[match]] == ids[match]
+
         # Galaxies without spectra stay in the parent; only their spec-z is missing.
         zspec = np.full(len(ids), np.nan)
         zspec[match] = s['specz'][j[match]]
+
         flag = np.zeros(len(ids), int)
         flag[match] = s['flag'][j[match]]
+
         survey = np.full(len(ids), '', dtype='U128')
         survey[match] = s['survey'][j[match]].astype(str)
+
     # Carry the noise model and spatial splits into the single canonical dataset.
     meta.update(
         canonical_parent=True,
@@ -158,8 +166,8 @@ def main():
         **data,
         grid=grid,
         pdf=pdf,
-        z_draws=draws,
-        zspec=zspec,
+        z_draws=draws,  # redshif tdraws from narrow-band posterior
+        zspec=zspec,    # spectroscopic redshift 
         has_specz=match,
         spec_flag=flag,
         spec_survey=survey,
