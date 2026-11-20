@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""Select the magnitude-limited COSMOS population and add LSST-like noise.
+'''
 
-Run from the repository root. Fluxes are microJy in native CFHT/HSC filters;
-this is a depth forecast, not a Rubin bandpass or image simulation.
-"""
+Select the magnitude-limited COSMOS galaxies and add LSST-like noise to
+CFHT/HSC filter broadband photometry: 
 
+'cfht_u', 'hsc_g', 'hsc_r', 'hsc_i', 'hsc_z', 'hsc_y' bands.
+
+
+'''
 import argparse
 import hashlib
 import json
@@ -23,6 +26,7 @@ def main():
     p.add_argument('--i-limit', type=float, default=25.0)
     p.add_argument('--i-snr-min', type=float, default=5.0)
     a = p.parse_args()
+
     # Sort by Classic ID so downstream joins and seeded realizations are reproducible.
     raw = np.genfromtxt(
         a.photometry, delimiter=',', names=True, dtype=None, encoding='utf8', filling_values=np.nan
@@ -30,18 +34,21 @@ def main():
     raw = raw[np.argsort(raw['id'])]
     if len(np.unique(raw['id'])) != len(raw):
         raise ValueError('Duplicate Classic IDs')
+
     # Keep the six native bands in ugrizy order; each row is one galaxy.
     prefixes = ['cfht_u', 'hsc_g', 'hsc_r', 'hsc_i', 'hsc_z', 'hsc_y']
     flux = np.column_stack([raw[b + '_flux_aper2'] for b in prefixes])
     err = np.column_stack([raw[b + '_fluxerr_aper2'] for b in prefixes])
+
     # Split sky cells before selection so nearby objects share a partition.
-    # Labels 0, 1, 2 denote training, validation, and test respectively.
+    # training, validation, and test  70/15/15 plit 
     cell = np.floor(raw['ra'] / 0.05).astype(np.int64) * 100000 + np.floor(
         raw['dec'] / 0.05
     ).astype(np.int64)
     cells = np.unique(cell)
     labels = np.random.default_rng(a.seed).choice(3, len(cells), p=[0.7, 0.15, 0.15])
     split = labels[np.searchsorted(cells, cell)]
+
     # Define the parent using native photometry, independently of spectroscopy.
     # AB magnitudes obey m = 23.9 - 2.5 log10(flux / microJy).
     # Retain negative fluxes outside i: these still carry likelihood information.
@@ -62,17 +69,20 @@ def main():
         keep &= cut
         counts[name] = int(keep.sum())
     native, native_err = flux[keep].astype('f4'), err[keep].astype('f4')
-    # Convert forecast five-sigma depths to one-sigma flux errors. Independent
-    # noise variances add; never reduce an existing COSMOS measurement error.
+
+    # Convert forecast LSST five-sigma depths to one-sigma flux errors.
+    # Independent noise variances add; never reduce an existing COSMOS measurement error.
     depths = np.array([25.6, 26.9, 26.9, 26.4, 25.6, 24.8])
     target = 10 ** ((23.9 - depths) / 2.5) / 5
     effective = np.maximum(native_err, target).astype('f4')
     added = np.sqrt(np.maximum(effective**2 - native_err**2, 0)).astype('f4')
+
     # Perturb fluxes as well as uncertainties. This fixed all-parent realization
     # supplies validation/test inputs; training draws fresh noise separately.
     observed = (
         native + np.random.default_rng(a.seed + 1).normal(size=native.shape) * added
     ).astype('f4')
+    
     # Record the exact input and selection, alongside both native and noisy fluxes.
     # Keeping native fluxes allows training augmentation without adding noise twice.
     with a.photometry.open('rb') as f:
