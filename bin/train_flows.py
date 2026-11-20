@@ -27,6 +27,8 @@ from pzflow.utils import PDFSampler, coverage
 
 
 def make_flow(context_features=12):
+    # Two conditional spline transforms map redshift to a standard normal.
+    # The context comprises six broadband flux features and six error features.
     transforms = [
         MaskedPiecewiseRationalQuadraticAutoregressiveTransform(
             features=1,
@@ -45,21 +47,27 @@ def make_flow(context_features=12):
 
 
 def z_to_t(z):
+    # Map the finite COSMOS support (0, 10) to the real line with a scaled logit.
+    # Clipping avoids divergent logits at the grid endpoints.
     z = torch.clamp(z, 1e-5, 10 - 1e-5)
     return (torch.log(z / (10 - z)) + 2.2) / 1.1
 
 
 def t_to_z(t):
+    # Invert the redshift logit to return predictions in physical redshift units.
     return 10 * torch.sigmoid(t * 1.1 - 2.2)
 
 
 def raw_features(flux, err):
+    # Asinh magnitudes remain defined for negative fluxes and nondetections.
+    # Log errors let the flow distinguish measurements with different precision.
     soft = 0.02  # microJy; fixed and independent of labels
     lupt = 23.9 - (2.5 / np.log(10)) * (np.arcsinh(flux / (2 * soft)) + np.log(soft))
     return np.c_[lupt, np.log(np.maximum(err, 1e-7) / soft)].astype(np.float32)
 
 
 def context(flux, err, mean, scale):
+    # Apply training-only feature scaling; clipping limits extreme input values.
     return torch.from_numpy(
         np.clip((raw_features(flux, err) - mean) / scale, -12, 12).astype(np.float32)
     )
@@ -69,12 +77,14 @@ def context(flux, err, mean, scale):
 def log_prob_z(model, z, ctx):
     z = torch.as_tensor(z, dtype=torch.float32).reshape(-1, 1)
     w = z_to_t(z)
+    # The flow density is in transformed t; add log|dt/dz| to obtain p(z | x).
     jac = np.log(10) - torch.log(z) - torch.log(10 - z) - np.log(1.1)
     return model.log_prob(w, context=ctx) + jac[:, 0]
 
 
 @torch.no_grad()
 def posterior_summary(model, ctx, zspec):
+    # Invert standard-normal quantiles rather than estimate intervals from samples.
     probs = torch.tensor([0.025, 0.16, 0.5, 0.84, 0.975])
     noise = torch.distributions.Normal(0.0, 1.0).icdf(probs)
     quant = []
@@ -88,6 +98,7 @@ def posterior_summary(model, ctx, zspec):
         )
         quant.append(t_to_z(q).reshape(n, 5).numpy())
         z = torch.tensor(zspec[start : start + 512], dtype=torch.float32).reshape(-1, 1)
+        # The base-normal CDF gives the posterior rank (PIT) of the true spec-z.
         u, _ = model._transform(z_to_t(z), context=x)
         pit.append((0.5 * (1 + torch.erf(u[:, 0] / np.sqrt(2)))).numpy())
         nll.append((-log_prob_z(model, z, x)).numpy())
@@ -101,6 +112,7 @@ def fit(name, teacher, data, sampler, mean, scale, args):
     rng = np.random.default_rng(args.seed)
     train = np.flatnonzero(splits == 0)
     valid = np.flatnonzero(splits == 1)
+    # Both models share spatial splits; only the supervised model requires spectra.
     if not teacher:
         train = train[np.isfinite(zspec[train])]
         valid = valid[np.isfinite(zspec[valid])]
@@ -135,11 +147,15 @@ def fit(name, teacher, data, sampler, mean, scale, args):
         losses = []
         for pos in range(0, len(train), 512):
             idx = train[pos : pos + 512]
+            # Start from native fluxes, adding only the missing LSST-like variance.
+            # Teacher labels are new independent draws from each full COSMOS PDF.
             xflux = flux[idx] + rng.normal(size=(len(idx), 6)).astype(np.float32) * extra[idx]
             x = context(xflux, err[idx], mean, scale)
             z = sampler.draw(idx, rng) if teacher else zspec[idx].astype(np.float32)
             target = z_to_t(torch.from_numpy(z[:, None]))
             opt.zero_grad(set_to_none=True)
+            # Monte Carlo maximum likelihood averages over teacher uncertainty.
+            # The z-to-t Jacobian is parameter-independent, so it is omitted here.
             loss = -model.log_prob(target, context=x).mean()
             if not torch.isfinite(loss):
                 raise RuntimeError(f'Nonfinite loss in {name}')
@@ -150,6 +166,8 @@ def fit(name, teacher, data, sampler, mean, scale, args):
             step += 1
             if step >= max_steps:
                 break
+        # Fixed validation labels and photometry make epoch losses comparable.
+        # Neither model uses the held-out test set for checkpoint selection.
         model.eval()
         with torch.no_grad():
             vals = [
@@ -165,6 +183,7 @@ def fit(name, teacher, data, sampler, mean, scale, args):
             f'{name} epoch={epoch + 1} step={step} train={np.mean(losses):.4f} val={val:.4f}',
             flush=True,
         )
+        # Reduce the learning rate on a plateau and stop after eight stale epochs.
         if val < best - 1e-4:
             best = val
             best_state = copy.deepcopy(model.state_dict())
@@ -201,6 +220,8 @@ def fit(name, teacher, data, sampler, mean, scale, args):
 
 
 def metrics(z, q, pit, nll):
+    # Point estimates use posterior medians; residuals scale as delta-z/(1+z).
+    # PIT-based coverage measures equal-tailed intervals, not highest-density sets.
     c68, c95 = coverage(pit)
     r = (q[:, 2] - z) / (1 + z)
     return dict(
@@ -236,9 +257,12 @@ def main():
         raise ValueError('Use the canonical parent from match_cosmos.py')
     if data['grid'][0] != 0 or data['grid'][-1] != 10:
         raise ValueError('This flow transform requires the COSMOS 0 <= z <= 10 grid')
+    # Estimate preprocessing only on training photometry, shared by both models.
     train = data['split'] == 0
     features = raw_features(data['native_flux'][train], data['fluxerr'][train])
     mean, scale = features.mean(0), np.maximum(features.std(0), 0.1)
+    # Score the same secure-spec test subset for both models. Its spectroscopic
+    # selection limits conclusions about the full magnitude-limited population.
     test = np.flatnonzero((data['split'] == 2) & data['has_specz'])
     if not len(test):
         raise ValueError('No held-out secure spectroscopy')
@@ -261,6 +285,7 @@ def main():
     )
     with args.data.open('rb') as f:
         run['parent_sha256'] = hashlib.file_digest(f, 'sha256').hexdigest()
+    # Fit both models and retain common IDs/inputs for paired comparisons.
     for name, teacher in [('bootstrapped', True), ('specz', False)]:
         model, info = fit(name, teacher, data, sampler, mean, scale, args)
         q, pit, nll = posterior_summary(model, ctx, data['zspec'][test])

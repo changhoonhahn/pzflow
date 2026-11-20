@@ -46,10 +46,13 @@ def main():
     if out_dir.exists() and any(out_dir.iterdir()):
         parser.error('Output directory is nonempty; choose another --output')
     out_dir.mkdir(parents=True, exist_ok=True)
+    # Set the resource location before importing the EAZY fitting classes.
     eazy.set_data_path(str(assets))
     from eazy.photoz import PhotoZ
     from eazy.filters import FilterFile
 
+    # Reuse the parent's fixed noisy fluxes; do not regenerate or add more noise.
+    # Selecting spec-test matches the flow evaluation IDs without giving zspec to EAZY.
     with np.load(args.data) as parent:
         if not json.loads(str(parent['metadata'])).get('canonical_parent'):
             raise ValueError('Use data/parent.npz from match_cosmos.py')
@@ -62,7 +65,9 @@ def main():
         err = parent['fluxerr'][ix].astype(float)
     if not len(ids):
         raise ValueError('Empty selected sample')
+    # Preserve uncorrected inputs so comparisons can verify exact parent identity.
     original_flux, original_err = flux.copy(), err.copy()
+    # Match Galactic reddening by ID, never by row position in a separate extract.
     ebv = np.genfromtxt(args.ebv, delimiter=',', names=True)
     ebv = ebv[np.argsort(ebv['id'])]
     j = np.searchsorted(ebv['id'], ids)
@@ -78,6 +83,8 @@ def main():
     correction = 10 ** (0.4 * ebv['ebv_mw'][j, None] * coeff[None, :])
     flux *= correction
     err *= correction
+    # A magnitude prior needs a total magnitude; apply the same aperture-to-total
+    # scale to every band and its error, preserving colors and signal-to-noise.
     if r_prior:
         meta = np.genfromtxt(args.magnitudes, delimiter=',', names=True)
         meta = meta[np.argsort(meta['id'])]
@@ -89,6 +96,8 @@ def main():
         assert np.isfinite(factor).all() and (factor > 0).all()
         flux *= factor[:, None]
         err *= factor[:, None]
+    # EAZY column names encode filter-library IDs, not sequential band indices.
+    # Use the native CFHT/HSC responses appropriate to the input measurements.
     filter_ids = [409, 314, 315, 316, 317, 318]  # CFHT cfh9302 u, HSC g/r/i/z/y
     filters = FilterFile(str(assets / 'filters/FILTER.RES.latest'))
     catalog = Table({'id': ids})
@@ -97,6 +106,9 @@ def main():
         catalog[f'E{fid}'] = err[:, k]
     catalog_path = out_dir / ('eazy_smoke_catalog.fits' if limit else 'eazy_catalog.fits')
     catalog.write(catalog_path, overwrite=True)
+    # This is an untuned template baseline: fixed FSPS templates and error model.
+    # Disable the default magnitude prior unless --r-prior explicitly enables one.
+    # Extinction is already corrected, and no spectrum fixes the fitted redshift.
     params = dict(
         CATALOG_FILE=str(catalog_path),
         CATALOG_FORMAT='fits',
@@ -127,6 +139,7 @@ def main():
         prior_file = out_dir / 'prior_R_zmax7_py.dat'
         prior_file.write_text('# ' + original)
         params.update(PRIOR_FILE=str(prior_file), PRIOR_FILTER=315, APPLY_PRIOR='y')
+    # F409/E409-style column names need no translation-file mappings.
     start = time.monotonic()
     translate = out_dir / 'eazy.translate'
     translate.write_text('')
@@ -138,9 +151,13 @@ def main():
         random_seed=20261116,
     )
     assert p.NOBJ == len(ids) and p.NFILT == 6 and np.all(p.nusefilt == 6)
+    # Fit template amplitudes on the redshift grid, then form the requested PDF.
+    # The beta prior stays disabled in both baseline configurations.
     p.fit_catalog(n_proc=0, get_best_fit=False, prior=r_prior, beta_prior=False)
     p.compute_lnp(prior=r_prior, beta_prior=False, clip_wavelength=None)
     p.evaluate_zml(prior=r_prior, beta_prior=False, clip_wavelength=None)
+    # Subtract each maximum log probability to avoid numerical underflow.
+    # Normalize as a continuous density using the actual redshift grid spacing.
     pdf = np.exp(p.lnp - p.lnp.max(axis=1)[:, None])
     assert np.isfinite(pdf).all() and (pdf.sum(axis=1) > 0).all()
     pdf /= np.trapezoid(pdf, p.zgrid, axis=1)[:, None]
@@ -149,6 +166,8 @@ def main():
         if limit
         else ('eazy_rprior' if r_prior else 'eazy_six_band')
     )
+    # Save full PDFs for later coverage tests; EAZY zml is retained separately
+    # from the posterior medians used in the flow comparison.
     np.savez_compressed(
         out_dir / f'{stem}_posteriors.npz',
         id=ids,
@@ -189,6 +208,8 @@ def main():
             'Six-band posterior degeneracies depend strongly on the chosen prior and templates.',
         ],
     )
+    # Hash individual templates as well as their list so a run records the
+    # actual fitted resources, even if the upstream download changes later.
     inputs = {
         'parent': args.data,
         'ebv': args.ebv,

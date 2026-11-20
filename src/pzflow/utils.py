@@ -12,6 +12,8 @@ class PDFSampler:
             raise ValueError('Redshift grid must increase strictly')
         self.p = np.asarray(pdf, dtype=np.float32).copy()
         self.c = np.empty_like(self.p)
+        # Normalize the piecewise-linear density and cache its trapezoidal CDF
+        # in chunks to bound the temporary memory needed for the full parent.
         for start in range(0, len(pdf), 2048):
             p = self.p[start : start + 2048]
             if not np.isfinite(p).all() or (p < 0).any():
@@ -29,6 +31,7 @@ class PDFSampler:
         u = rng.random((len(indices), n_samples))
         lo = np.zeros(u.shape, dtype=int)
         hi = np.full(u.shape, len(self.grid) - 1, dtype=int)
+        # Locate each uniform draw's CDF interval with vectorized binary search.
         for _ in range(int(np.ceil(np.log2(len(self.grid)))) + 1):
             mid = (lo + hi) // 2
             right = self.c[indices, mid] <= u
@@ -37,6 +40,8 @@ class PDFSampler:
         a = self.p[indices, j]
         slope = (self.p[indices, j + 1] - a) / np.diff(self.grid)[j]
         mass = np.maximum(u - self.c[indices, j], 0)
+        # Within a cell the density is linear, so its integrated mass is quadratic.
+        # This stable root gives a continuous sample rather than a grid-point draw.
         den = a + np.sqrt(np.maximum(a * a + 2 * slope * mass, 0))
         dt = np.divide(2 * mass, den, out=np.zeros_like(mass), where=den > 0)
         z = (self.grid[j] + np.clip(dt, 0, np.diff(self.grid)[j])).astype(np.float32)
@@ -46,6 +51,7 @@ class PDFSampler:
         z = np.asarray(z)
         row = np.arange(len(z)) if indices is None else np.asarray(indices)
         j = np.clip(np.searchsorted(self.grid, z, side='right') - 1, 0, len(self.grid) - 2)
+        # Integrate the local linear density exactly; clip outside the z support.
         dt = np.clip(z, self.grid[0], self.grid[-1]) - self.grid[j]
         a = self.p[row, j]
         slope = (self.p[row, j + 1] - a) / np.diff(self.grid)[j]
@@ -54,5 +60,6 @@ class PDFSampler:
 
 def coverage(pit, levels=(0.68, 0.95)):
     """Empirical coverage of equal-tailed intervals from PIT values."""
+    # A truth lies inside the central interval of mass c iff |2*PIT - 1| <= c.
     rank = np.abs(2 * np.asarray(pit) - 1)
     return np.array([np.mean(rank <= level) for level in np.atleast_1d(levels)])

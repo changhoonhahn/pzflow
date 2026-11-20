@@ -3,11 +3,13 @@ from pathlib import Path
 from setuptools import find_packages, setup
 
 root = Path(__file__).parent
+# Keep installation dependencies in the single shared requirements file.
 requirements = [
     line.strip()
     for line in (root / 'requirements.txt').read_text().splitlines()
     if line.strip() and not line.lstrip().startswith('#')
 ]
+# Discover only the small package under src/; analysis entry points stay in bin/.
 setup(
     name='pzflow-cosmos',
     version='0.1.0',

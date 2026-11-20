@@ -21,6 +21,8 @@ from pzflow.utils import PDFSampler
 
 
 def read_pdfs(path, ids):
+    # The cache and FITS branches return PDFs in the requested, sorted ID order.
+    # Catalog row positions are not Classic IDs.
     if path.suffix == '.npz':
         with np.load(path) as c:
             source_ids = c['id']
@@ -28,6 +30,7 @@ def read_pdfs(path, ids):
             source_ids = source_ids[order]
             if len(np.unique(source_ids)) != len(source_ids):
                 raise ValueError('Duplicate PDF IDs')
+            # Search the sorted IDs, then recover the corresponding original PDF rows.
             j = np.searchsorted(source_ids, ids)
             if np.any(j == len(source_ids)) or not np.array_equal(source_ids[j], ids):
                 raise ValueError('Missing parent IDs in PDF cache')
@@ -38,13 +41,17 @@ def read_pdfs(path, ids):
         width, height = header['NAXIS1'], header['NAXIS2']
         if header['BITPIX'] != -32:
             raise ValueError('Expected float32 PDF image')
+        # The first image row stores the z grid after a leading placeholder.
+        # Later rows store an explicit ID followed by big-endian float32 PDF values.
         grid = np.frombuffer(f.read(width * 4), dtype='>f4')[1:].astype(float)
         pdf = np.empty((len(ids), width - 1), dtype='f4')
+        # Stream bounded chunks rather than loading the full COSMOS PDF image.
         for start in range(1, height, 16384):
             n = min(16384, height - start)
             block = np.frombuffer(f.read(n * width * 4), dtype='>f4').reshape(n, width)
             rid = block[:, 0].astype('i8')
             j = np.searchsorted(ids, rid)
+            # Guard insertion indices before indexing; count matches to catch duplicates.
             match = j < len(ids)
             match[match] &= ids[j[match]] == rid[match]
             np.add.at(seen, j[match], 1)
@@ -82,12 +89,16 @@ def main():
     sampler = PDFSampler(
         grid, pdf
     )  # reject invalid PDFs rather than silently change the population
+    # Cached draws fix the teacher validation targets. Training will resample the
+    # full PDFs, so it is not restricted to this finite set of redshifts.
     rng = np.random.default_rng(a.seed)
     draws = np.empty((len(ids), a.draws), dtype='f4')
     for start in range(0, len(ids), 2048):
         draws[start : start + 2048] = sampler.draw(
             np.arange(start, min(start + 2048, len(ids))), rng, a.draws
         )
+    # Attach public, secure galaxy spectra by supplied Classic ID. These cuts
+    # do not require agreement with photo-z and do not define the parent population.
     with fits.open(a.spectroscopy, memmap=True) as h:
         s = h[1].data
         good = (
@@ -108,12 +119,14 @@ def main():
         j = np.searchsorted(sid, ids)
         match = j < len(sid)
         match[match] &= sid[j[match]] == ids[match]
+        # Galaxies without spectra stay in the parent; only their spec-z is missing.
         zspec = np.full(len(ids), np.nan)
         zspec[match] = s['specz'][j[match]]
         flag = np.zeros(len(ids), int)
         flag[match] = s['flag'][j[match]]
         survey = np.full(len(ids), '', dtype='U128')
         survey[match] = s['survey'][j[match]].astype(str)
+    # Carry the noise model and spatial splits into the single canonical dataset.
     meta.update(
         canonical_parent=True,
         pdf_assumption='COSMOS PDFs treated as unbiased; no recalibration or prior division',
