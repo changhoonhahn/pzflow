@@ -112,23 +112,57 @@ def posterior_summary(model, ctx, zspec):
     return np.concatenate(quant), np.concatenate(pit), np.concatenate(nll)
 
 
-def fit(name, teacher, data, sampler, mean, scale, args):
-    '''
-    '''
+def train_cosmos_pdf(data, sampler, mean, scale, args):
+    '''Train on all training galaxies, averaging over their COSMOS posterior labels.
 
-
-    flux, err, extra = data['native_flux'], data['fluxerr'], data['sigma_added']
-    zspec, splits = data['zspec'], data['split']
-    epochs, max_steps = args.epochs, args.max_steps
-    rng = np.random.default_rng(args.seed)
-    train = np.flatnonzero(splits == 0)
-    valid = np.flatnonzero(splits == 1)
-    # Both models share spatial splits; only the supervised model requires spectra.
-    if not teacher:
-        train = train[np.isfinite(zspec[train])]
-        valid = valid[np.isfinite(zspec[valid])]
+    The sampler draws from the full PDFs during optimization. Four cached draws
+    per validation galaxy fix the validation objective without using any spec-z.
+    Returns the best-checkpoint flow and its training summary.
+    '''
+    train = np.flatnonzero(data['split'] == 0)
+    valid = np.flatnonzero(data['split'] == 1)
     if not len(train) or not len(valid):
-        raise ValueError('Empty training or validation sample')
+        raise ValueError('Empty COSMOS-PDF training or validation sample')
+
+    rng = np.random.default_rng(args.seed)
+    vi = rng.choice(valid, min(len(valid), 4096), replace=False)
+    # Match four labels per galaxy to four copies of its fixed validation context.
+    vy = data['z_draws'][vi, :4].reshape(-1)
+    vi = np.repeat(vi, 4)
+    return _fit_flow(
+        'bootstrapped', data, train, valid, vi, vy, sampler.draw, rng, mean, scale, args
+    )
+
+
+def train_specz(data, mean, scale, args):
+    '''Train on the secure-spec subset using one observed redshift per galaxy.
+
+    Uses the same spatial partitions and broadband preprocessing as the COSMOS
+    model. No PDF sampler or cached posterior draws are required by this function.
+    Returns the best-checkpoint flow and its training summary.
+    '''
+    has_specz = np.isfinite(data['zspec'])
+    train = np.flatnonzero((data['split'] == 0) & has_specz)
+    valid = np.flatnonzero((data['split'] == 1) & has_specz)
+    if not len(train) or not len(valid):
+        raise ValueError('Empty spec-z training or validation sample')
+
+    rng = np.random.default_rng(args.seed)
+    vi = rng.choice(valid, min(len(valid), 4096), replace=False)
+    vy = data['zspec'][vi].astype(np.float32)
+
+    def specz_labels(indices, rng):
+        # Match the sampler's interface, but keep observed redshifts fixed.
+        # Do not consume random draws here: only the photometry is augmented.
+        return data['zspec'][indices].astype(np.float32)
+
+    return _fit_flow('specz', data, train, valid, vi, vy, specz_labels, rng, mean, scale, args)
+
+
+def _fit_flow(name, data, train, valid, vi, vy, draw_labels, rng, mean, scale, args):
+    '''Optimize either label source with identical flow and early-stopping settings.'''
+    flux, err, extra = data['native_flux'], data['fluxerr'], data['sigma_added']
+    epochs, max_steps = args.epochs, args.max_steps
 
     # initialize the conditional flow
     torch.manual_seed(args.seed)
@@ -136,16 +170,13 @@ def fit(name, teacher, data, sampler, mean, scale, args):
     opt = torch.optim.AdamW(model.parameters(), lr=8e-4, weight_decay=1e-5)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, patience=3, factor=0.5)
 
-    # Fixed parent fluxes and cached labels; no spec-z used for teacher validation.
-    vi = rng.choice(valid, min(len(valid), 4096), replace=False)
-    vy = data['z_draws'][vi, :4].reshape(-1) if teacher else zspec[vi].astype(np.float32)
-    if teacher:
-        vi = np.repeat(vi, 4)
+    # Each public trainer supplies fixed validation labels and their row indices.
+    # Neither validation objective uses the held-out test set.
     vf = data['flux'][vi]
     vx = context(vf, err[vi], mean, scale)
     vt = z_to_t(torch.from_numpy(vy[:, None]))
 
-    # train with fresh photometric noise and posterior labels
+    # Train with fresh photometric noise and the selected trainer's label source.
     best = float('inf')
     best_state = None
     bad = 0
@@ -159,13 +190,14 @@ def fit(name, teacher, data, sampler, mean, scale, args):
         for pos in range(0, len(train), 512):
             idx = train[pos : pos + 512]
             # Start from native fluxes, adding only the missing LSST-like variance.
-            # Teacher labels are new independent draws from each full COSMOS PDF.
+            # The COSMOS trainer resamples PDFs; the spec-z trainer keeps labels fixed.
             xflux = flux[idx] + rng.normal(size=(len(idx), 6)).astype(np.float32) * extra[idx]
             x = context(xflux, err[idx], mean, scale)
-            z = sampler.draw(idx, rng) if teacher else zspec[idx].astype(np.float32)
+            z = draw_labels(idx, rng)
             target = z_to_t(torch.from_numpy(z[:, None]))
             opt.zero_grad(set_to_none=True)
-            # Monte Carlo maximum likelihood averages over teacher uncertainty.
+            # COSMOS labels give a Monte Carlo posterior average; spec-z labels
+            # give the usual supervised maximum-likelihood objective.
             # The z-to-t Jacobian is parameter-independent, so it is omitted here.
             loss = -model.log_prob(target, context=x).mean()
             if not torch.isfinite(loss):
@@ -270,7 +302,7 @@ def main():
         raise ValueError('Use the canonical parent from match_cosmos.py')
     if data['grid'][0] != 0 or data['grid'][-1] != 10:
         raise ValueError('This flow transform requires the COSMOS 0 <= z <= 10 grid')
-    
+
     # Estimate preprocessing only on training photometry, shared by both models.
     train = data['split'] == 0
     features = raw_features(data['native_flux'][train], data['fluxerr'][train])
@@ -300,8 +332,11 @@ def main():
     with args.data.open('rb') as f:
         run['parent_sha256'] = hashlib.file_digest(f, 'sha256').hexdigest()
     # Fit both models and retain common IDs/inputs for paired comparisons.
-    for name, teacher in [('bootstrapped', True), ('specz', False)]:
-        model, info = fit(name, teacher, data, sampler, mean, scale, args)
+    trained = {
+        'bootstrapped': train_cosmos_pdf(data, sampler, mean, scale, args),
+        'specz': train_specz(data, mean, scale, args),
+    }
+    for name, (model, info) in trained.items():
         q, pit, nll = posterior_summary(model, ctx, data['zspec'][test])
         predictions.update({name + '_quantiles': q, name + '_pit': pit, name + '_nll': nll})
         info['metrics'] = metrics(data['zspec'][test], q, pit, nll)
