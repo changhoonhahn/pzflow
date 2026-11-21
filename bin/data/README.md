@@ -240,3 +240,41 @@ catalogs, filters, individual templates, and prior. Results remain local.
 
 For a quick verification of either mode use `--limit 20 --output results/eazy/smoke`.
 Limited runs are explicitly flagged as smoke tests, not full-sample results.
+
+## Controlled broadband SOM versus spec-z flow
+
+Create a persistent environment with `python3 -m venv .venv` and install
+`requirements.txt` with `.venv/bin/python -m pip install -r requirements.txt`.
+Run `.venv/bin/python bin/compare_som.py`, then execute `nb/som_comparison.ipynb`
+with that same environment. The SciPy pin is 1.17.1 to satisfy EAZY's <1.18 constraint.
+The comparison reads only IDs, degraded flux/error, spec-z, spatial splits,
+i magnitude and sky-cell ID from `data/parent.npz`. It does not load native
+photometry or COSMOS PDF labels. Both methods train on the same 22,604 spectra;
+5,083 held-out spectra are scored. Feature normalization uses only labeled
+training rows, and both methods use the same 12 features and no augmentation.
+The spec-z flow is retrained for this control; the older augmented flow results
+are not substituted. The flow's original architecture and stopping rule remain.
+
+The comparator is a single rectangular MiniSom with cell redshift distributions,
+not full deep-to-wide SOMPZ. MiniSom 2.3.6 is from
+https://github.com/JustGlowing/minisom (cite Vettigli 2018).
+Train 8x8, 16x16 and 32x32 maps for 60,000 random online updates. The Gaussian
+neighborhood starts at half the map side and decays linearly toward one cell;
+learning rate starts at 0.5 with MiniSom's default asymptotic decay. Initialize
+prototypes from labeled training features. Redshift histograms are smoothed in
+log(1+z), testing bandwidths 0.005, 0.01, 0.02, 0.04, 0.08 and global-training-n(z)
+pseudo-counts 0, 5, 20. Empty cells borrow the nearest populated prototype.
+Configuration is selected by validation NLL on the exact 4,096 validation rows
+used by the first flow seed; it remains fixed for the other four seeds. This
+is separate from the flow's per-seed early-stopping subset of the 4,803 validation
+spectra. No test labels affect model fitting or hyperparameter selection.
+
+Five seeds are 20261024 through 20261028. Local `results/som_comparison/` stores
+all checkpoints, maps, per-seed predictions, validation trials, selected settings,
+source hash and metrics. CDFs use the common z=0..10 grid in steps of 0.01 for
+CRPS and stacked-distribution checks; SOM quantiles interpolate its finer CDF.
+Reported SOM NLL floors densities at 1e-12 for numerical stability; CRPS is the
+additional proper score that does not require such a floor. Magnitude uncertainty
+bands use 200 paired resamples of a model seed and evaluation sky cells.
+These do not represent full survey cosmic variance or calibration-label refits.
+All reported truth comparisons remain limited to the selected spectroscopic sample.

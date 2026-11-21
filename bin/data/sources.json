@@ -1879,6 +1879,7 @@
     "parent": "data/parent.npz",
     "shared_utilities": "src/pzflow/utils.py",
     "note": "The 52 recorded snapshots include historical resources and derived products. New run manifests record current source hashes.",
-    "optional_baseline": "bin/run_eazy.py"
+    "optional_baseline": "bin/run_eazy.py",
+    "broadband_som_comparison": "bin/compare_som.py"
   }
 }

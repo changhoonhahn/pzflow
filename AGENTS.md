@@ -7,7 +7,7 @@
 - Keep code minimal. Use the single requirements.txt and setup.py; avoid duplicate wrapper/implementation layers and redundant notebook generators.
 - Maintain data provenance and reproducibility notes in bin/data/. Preserve the user's concise README.
 
-- Keep the active workflow to bin/lsst_like.py, bin/match_cosmos.py, bin/train_flows.py, and bin/run_eazy.py. All analyses use data/parent.npz. Retain only one small shared utility file, src/pzflow/utils.py, plus package initialization. Ask before adding more shared modules.
+- Keep the active workflow to bin/lsst_like.py, bin/match_cosmos.py, bin/train_flows.py, bin/run_eazy.py, and bin/compare_som.py. All analyses use data/parent.npz. Retain only one small shared utility file, src/pzflow/utils.py, plus package initialization. Ask before adding more shared modules.
 
 ## Default Python style
 
@@ -36,7 +36,7 @@ standard. Preserve working behavior and public interfaces during style changes.
   useful; do not invent aliases for every module.
 - Put command-line execution behind a main guard. Use argparse for configurable
   scripts; a separate parse_args() is useful when argument setup is substantial.
-  Keep the existing four workflow scripts and the single shared utils.py.
+  Keep the existing workflow scripts and the single shared utils.py.
 
 ### Syntax and formatting
 
