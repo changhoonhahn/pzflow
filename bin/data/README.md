@@ -241,40 +241,52 @@ catalogs, filters, individual templates, and prior. Results remain local.
 For a quick verification of either mode use `--limit 20 --output results/eazy/smoke`.
 Limited runs are explicitly flagged as smoke tests, not full-sample results.
 
-## Controlled broadband SOM versus spec-z flow
+## Controlled noise-aware broadband SOM versus spec-z flow
 
-Create a persistent environment with `python3 -m venv .venv` and install
-`requirements.txt` with `.venv/bin/python -m pip install -r requirements.txt`.
-Run `.venv/bin/python bin/compare_som.py`, then execute `nb/som_comparison.ipynb`
-with that same environment. The SciPy pin is 1.17.1 to satisfy EAZY's <1.18 constraint.
-The comparison reads only IDs, degraded flux/error, spec-z, spatial splits,
-i magnitude and sky-cell ID from `data/parent.npz`. It does not load native
-photometry or COSMOS PDF labels. Both methods train on the same 22,604 spectra;
-5,083 held-out spectra are scored. Feature normalization uses only labeled
-training rows, and both methods use the same 12 features and no augmentation.
-The spec-z flow is retrained for this control; the older augmented flow results
-are not substituted. The flow's original architecture and stopping rule remain.
+Use the persistent `.venv` environment installed from `requirements.txt`.
+Run `.venv/bin/python bin/compare_som.py`, then execute `nb/som_comparison.ipynb`.
+The parent remains `data/parent.npz`; 22,604 training spectra and 5,083 held-out
+spectra, fixed degraded fluxes/errors and the existing spatial splits are shared.
+No native/deep photometry, COSMOS PDF labels or extra augmentation are used.
 
-The comparator is a single rectangular MiniSom with cell redshift distributions,
-not full deep-to-wide SOMPZ. MiniSom 2.3.6 is from
-https://github.com/JustGlowing/minisom (cite Vettigli 2018).
-Train 8x8, 16x16 and 32x32 maps for 60,000 random online updates. The Gaussian
-neighborhood starts at half the map side and decays linearly toward one cell;
-learning rate starts at 0.5 with MiniSom's default asymptotic decay. Initialize
-prototypes from labeled training features. Redshift histograms are smoothed in
-log(1+z), testing bandwidths 0.005, 0.01, 0.02, 0.04, 0.08 and global-training-n(z)
-pseudo-counts 0, 5, 20. Empty cells borrow the nearest populated prototype.
-Configuration is selected by validation NLL on the exact 4,096 validation rows
-used by the first flow seed; it remains fixed for the other four seeds. This
-is separate from the flow's per-seed early-stopping subset of the 4,803 validation
-spectra. No test labels affect model fitting or hyperparameter selection.
+The SOM now uses the reference DES NoiseSOM implementation:
+https://github.com/AndresaCampos/sompz_y6/blob/80d852dc9178075df28929dd575591e6298ef689/sompz/NoiseSOM.py
+and the settings in its `train_SOM_wide.py`. Cite Campos et al.,
+https://arxiv.org/abs/2408.00922 and Sanchez et al., https://arxiv.org/abs/2004.09542.
+The code and MIT license are cached locally under `data/sompz_noise/`; the source
+is downloaded automatically if absent and verified against a pinned SHA256.
+Compatibility changes are exactly `np.product` to `np.prod` and omission of
+unused pandas/matplotlib plotting imports. No distance or update equations are
+rewritten. The upstream source and license hashes are recorded in `sources.json`.
 
-Five seeds are 20261024 through 20261028. Local `results/som_comparison/` stores
-all checkpoints, maps, per-seed predictions, validation trials, selected settings,
-source hash and metrics. CDFs use the common z=0..10 grid in steps of 0.01 for
-CRPS and stacked-distribution checks; SOM quantiles interpolate its finer CDF.
-Reported SOM NLL floors densities at 1e-12 for numerical stability; CRPS is the
-additional proper score that does not require such a floor. Magnitude uncertainty
-bands use 200 paired resamples of a model seed and evaluation sky cells.
-These do not represent full survey cosmic variance or calibration-label refits.
-All reported truth comparisons remain limited to the selected spectroscopic sample.
+Inputs to the SOM are six fluxes and their measurement errors, rather than the
+previous 12 Euclidean coordinates. The flow retains its 12 features. This changes
+how the same information is used; neither method gains additional photometry.
+The reference `AsinhMetric(lnScaleSigma=0.4, lnScaleStep=0.03)` optimizes over an
+overall flux scale with a Gaussian penalty. Its noise-weighted distance and
+multiplicative updates handle low-SNR fluxes while keeping prototypes positive.
+Negative observations are retained. Training uses `minError=0.02` and
+`hFunc(nTrain, sigma=(30,1))`, no periodic boundaries and sample initialization.
+Following the upstream classifier, assignments use supplied measurement errors.
+
+Keep 60,000 online updates per map, sampling labeled training rows with replacement.
+Candidate sizes are 8x8, 16x16, 32x32. The same 45 combinations of map size,
+log(1+z) PDF bandwidth (0.005, 0.01, 0.02, 0.04, 0.08) and global-training-n(z)
+pseudo-count (0, 5, 20) are reselected on the original 4,096-object validation
+subset. Five seeds remain 20261024..20261028. Empty cells borrow the closest
+populated prototype under the same noise metric, using median training errors
+for the prototype target. No test labels enter calibration or tuning.
+
+New outputs are local under `results/noisesom_comparison/`; the earlier Euclidean
+experiment under `results/som_comparison/` is preserved. The default comparison
+reuses that experiment's unchanged flow fits after verifying parent hash,
+preprocessing, test IDs, redshifts, fluxes/errors and CDF grid. If that cache is
+absent, it fits the same five fixed-photometry flow controls. The notebook also
+reports the earlier Euclidean metrics as a before/after reference.
+This remains a single-SOM conditional-density test, not full SOMPZ with deep-wide
+transfer, shear selection weights or clustering-redshift calibration.
+
+PDF estimation, CRPS integration on z=0..10 in steps of 0.01, equal-tailed
+coverage and stacked-n(z) checks are unchanged. SOM NLL floors densities at
+1e-12 for numerical stability. Plot bands use 200 paired resamples of a seed
+and evaluation sky cells, excluding full survey cosmic variance and label refits.

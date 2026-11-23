@@ -66,6 +66,18 @@
     "derived": {
       "source": "Local deterministic preparation, fitted models, and figure snapshots",
       "notes": "These products are kept under data/ and results/ locally, not in Git. Current figure-data snapshots reside in results/figure_data/. Historical provenance JSON retains some pre-reorganization paths."
+    },
+    "noise_som": {
+      "repository": "https://github.com/AndresaCampos/sompz_y6",
+      "commit": "80d852dc9178075df28929dd575591e6298ef689",
+      "path": "data/sompz_noise/NoiseSOM.py",
+      "url": "https://raw.githubusercontent.com/AndresaCampos/sompz_y6/80d852dc9178075df28929dd575591e6298ef689/sompz/NoiseSOM.py",
+      "sha256": "29b3647462c000d1530c50b3bc7ed7edde2a39295b80a4a1f1443d0feb2cc40a",
+      "license": "MIT",
+      "license_sha256": "7fbda9f8e2e0ae677cc3292e94805c3d843c4eb3b50b366c34269ba17ee1e6f5",
+      "citation": "https://arxiv.org/abs/2408.00922",
+      "compatibility": "np.product -> np.prod; omit unused pandas and matplotlib plotting imports only",
+      "notes": "Algorithm resource, additional to the 52 historical data/resource snapshots; cached code and outputs remain untracked."
     }
   },
   "files": [

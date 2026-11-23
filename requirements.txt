@@ -11,4 +11,3 @@ eazy==0.8.7
 dust_extinction==1.7
 extinction==0.4.10
 h5py==3.16.0
-minisom==2.3.6
