@@ -5,6 +5,9 @@
 - Keep the tracked directories limited to bin/, nb/, tex/, and src/pzflow/. Root configuration files are allowed. Put executable workflows in bin/, reusable functions in src/pzflow/, and notebook source in nb/.
 - Keep data, results, figures, checkpoints, executed notebook outputs, caches, and archives local and ignored. Do not re-add them to Git. Save executed notebooks in results/notebooks_executed/.
 - Keep code minimal. Use the single requirements.txt and setup.py; avoid duplicate wrapper/implementation layers and redundant notebook generators.
+- Prefer Conda environments. environment.yml bootstraps Python/pip and the editable
+  install; keep scientific dependency pins only in requirements.txt via setup.py.
+  Run scripts and notebook kernels with the activated environment's Python.
 - Maintain data provenance and reproducibility notes in bin/data/. Preserve the user's concise README.
 
 - Keep the active workflow to bin/lsst_like.py, bin/match_cosmos.py, bin/train_flows.py, bin/run_eazy.py, and bin/compare_som.py. All analyses use data/parent.npz. Retain only one small shared utility file, src/pzflow/utils.py, plus package initialization. Ask before adding more shared modules.

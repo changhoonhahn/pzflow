@@ -1,0 +1,3 @@
+include requirements.txt environment.yml
+recursive-include bin *.py *.md *.json *.sql SHA256SUMS
+recursive-include nb *.ipynb

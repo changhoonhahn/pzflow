@@ -243,8 +243,9 @@ Limited runs are explicitly flagged as smoke tests, not full-sample results.
 
 ## Controlled noise-aware broadband SOM versus spec-z flow
 
-Use the persistent `.venv` environment installed from `requirements.txt`.
-Run `.venv/bin/python bin/compare_som.py`, then execute `nb/som_comparison.ipynb`.
+Create the Conda environment with `conda env create -f environment.yml`, then
+`conda activate pzflow`. Run `python bin/compare_som.py`, then execute
+`nb/som_comparison.ipynb` with the same environment.
 The parent remains `data/parent.npz`; 22,604 training spectra and 5,083 held-out
 spectra, fixed degraded fluxes/errors and the existing spatial splits are shared.
 No native/deep photometry, COSMOS PDF labels or extra augmentation are used.
