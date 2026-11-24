@@ -2,102 +2,10 @@
 Probabilistically transfer COSMOS2020 LePhare redshift posteriors to LSST-like broadband photometry using normalizing flows.
 
 ## Install
-
-Install [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html)
-and Git first. From a terminal on macOS or Linux:
-
 ```bash
-git clone https://github.com/changhoonhahn/pzflow.git
-cd pzflow
-conda env create -f environment.yml
-conda activate pzflow
-python -m pip check
-```
-
-`environment.yml` creates a Python 3.12 Conda environment and installs this checkout
-in editable mode. Conda manages Python and pip; pip installs the project's pinned
-scientific packages from the single `requirements.txt` through `setup.py`.
-There is no second dependency list to keep synchronized. Run these commands from
-the repository root so the editable install can find the project.
-
-If you prefer to create the environment manually, or already have a suitable
-Conda environment:
-
-```bash
-conda create -n pzflow --override-channels -c conda-forge python=3.12 pip
-conda activate pzflow
 python -m pip install -e .
 python -m pip check
 ```
-
-Skip `conda create` when using an existing Python 3.12 environment. Always use
-`python -m pip` from the activated environment, without `--user`. Keep the checkout
-and Conda environment on persistent storage, not under `/tmp`. On later logins,
-return to the checkout and run `conda activate pzflow`. No `.venv` is required.
-After pulling code or dependency updates, run `python -m pip install -e .` again
-inside that environment. Recreate a dedicated environment if you need to undo
-unrelated package changes.
-
-The distribution is named `pzflow-cosmos`; its Python import is `pzflow`. Installing
-an unrelated PyPI package named `pzflow` does not install this project.
-The supplied training and comparison scripts use the CPU; no GPU is required.
-For a CPU-only PyTorch build on Linux, use the manual Conda setup above and
-install the matching pinned version using the
-[official PyTorch instructions](https://pytorch.org/get-started/locally/) before
-`python -m pip install -e .`.
-
-Check the installation without downloading any catalogs:
-
-```bash
-python -c "import pzflow, numpy, scipy, torch, nflows, astropy; print('Imports OK')"
-python bin/train_flows.py --help
-python bin/compare_som.py --help
-```
-
-Installation was verified in a clean Conda 25.7 environment with Python 3.12.16
-on macOS ARM64, including editable, source-archive and wheel installs.
-
-Run all commands below from the **repository root**. Scripts stay in `bin/`;
-installation does not create system-wide commands with those names.
-
-## Bring the data to the new machine
-
-The Git repository contains code and notebook source, **not** data, trained models,
-results, or compiled figures. For flow training and NoiseSOM, the simplest setup
-is to copy the existing **`data/parent.npz`** into the same relative path:
-
-```bash
-mkdir -p data
-scp YOUR_SOURCE_MACHINE:/path/to/pzflow/data/parent.npz data/parent.npz
-```
-
-Replace the source host and path with your own. The current parent is about
-**60.5 MB** compressed and contains 162,239 galaxies, with degraded broadband
-fluxes/errors, COSMOS PDFs, spectroscopic matches and fixed spatial splits. You do
-not need the raw catalogs again when using this parent. Check the copy:
-
-```bash
-python -c "import numpy as np; d=np.load('data/parent.npz'); print('Galaxies:', len(d['id'])); print('Fields:', d.files); d.close()"
-```
-
-For the exact parent used in the current comparisons, SHA256 is
-`1c299b737fcd33cb0496eb6758d3cbe469932b5a12b65c451ae5d6511614c647`.
-Use `shasum -a 256 data/parent.npz` on macOS or `sha256sum data/parent.npz` on Linux.
-A rebuilt or intentionally updated parent may have different bytes; do not silently
-mix its predictions with cached fits from another parent.
-
-To rebuild the parent instead, restore the photometry extract, full LePhare PDFs,
-and spectroscopic catalog to the locations documented in
-[bin/data/README.md](bin/data/README.md), then run:
-
-```bash
-python bin/lsst_like.py
-python bin/match_cosmos.py
-```
-
-The provenance notes include public sources, selection cuts, hashes, and the
-limitations of reconstructing the original TAP extract. A clone alone is not a
-complete copy of the analysis data.
 
 ## Train and compare
 
