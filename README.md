@@ -171,3 +171,8 @@ Building the paper additionally requires `latexmk`, pdfLaTeX and BibTeX:
 `make -C tex`, after restoring/regenerating its figure inputs. The paper's frozen
 main-text experiments and the current pipeline are distinct; see the provenance
 notes before replacing manuscript figure inputs.
+
+For paper-style comparisons of the three demo outputs and the full COSMOS LePhare
+PDFs, run [nb/paper_comparison.ipynb](nb/paper_comparison.ipynb). It aligns the same
+spectroscopic test galaxies, plots accuracy/coverage and magnitude-dependent NMAD,
+and exports new paper-ready PDFs without replacing the manuscript's frozen figures.
