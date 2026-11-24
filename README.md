@@ -84,3 +84,7 @@ For paper-style comparisons of the three demo outputs and the full COSMOS LePhar
 PDFs, run [nb/paper_comparison.ipynb](nb/paper_comparison.ipynb). It aligns the same
 spectroscopic test galaxies, plots accuracy/coverage and magnitude-dependent NMAD,
 and exports new paper-ready PDFs without replacing the manuscript's frozen figures.
+
+For the matching step-by-step EAZY broadband fit, run [nb/eazy.ipynb](nb/eazy.ipynb).
+It fits the full flow test split and saves compatible spectroscopic-test predictions;
+restore the optional EAZY inputs described in the data notes first.
