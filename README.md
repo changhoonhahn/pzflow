@@ -155,8 +155,14 @@ Activate `pzflow` before registering or starting the kernel.
 Open `nb/comparison.ipynb` for the COSMOS-PDF/spec-z flow results or
 `nb/som_comparison.ipynb` for NoiseSOM, and select **Python (pzflow)**. Use an
 existing notebook frontend, or install JupyterLab separately with
-`python -m pip install jupyterlab`. Notebooks read saved run outputs; they do not
-train missing models. Save executed copies under `results/notebooks_executed/`.
+`python -m pip install jupyterlab`. These comparison notebooks read saved outputs.
+For a step-by-step training and prediction demo, open `nb/noisesom_demo.ipynb`.
+It trains one NoiseSOM directly from `data/parent.npz`, builds cell redshift PDFs,
+evaluates the test sample, and shows how to reload the saved predictor.
+The matching flow demos are `nb/broadband_flow_demo.ipynb` (spec-z labels) and
+`nb/bootstrapped_flow_demo.ipynb` (full COSMOS-PDF labels). They show the training
+loop, predict from test fluxes/errors, evaluate against spectra, and reload models.
+Save executed copies under `results/notebooks_executed/`.
 
 The supplied plotting style uses LaTeX, so figure generation requires a system
 LaTeX installation (for example, TeX Live or MacTeX) with `latex` and `dvipng`
